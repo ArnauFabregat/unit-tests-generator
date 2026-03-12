@@ -5,6 +5,7 @@ description = "Open source project to build a unit tests generator in Python."
 readme = "README.md"
 requires-python = "==3.13.12"
 dependencies = [
+    "networkx>=3.6.1",
 ]
 
 [dependency-groups]

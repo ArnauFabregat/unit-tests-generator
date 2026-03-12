@@ -9,6 +9,7 @@ dependencies = [
     "litellm>=1.82.1",
     "networkx>=3.6.1",
     "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
 ]
 
 [dependency-groups]
@@ -24,6 +25,17 @@ test = [
   "pytest>=8",
   "pytest-cov>=5",
 ]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 
 # Ruff configuration (https://docs.astral.sh/ruff/configuration/)
 [tool.ruff]

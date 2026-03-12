@@ -1,7 +1,7 @@
 # type: ignore
 import os
 import ast
-from src.raggraph.utils import get_source_segment, canonical_id, normalize_signature
+from utgen.raggraph.utils import get_source_segment, canonical_id, normalize_signature
 
 
 class CodeGraphBuilder1(ast.NodeVisitor):

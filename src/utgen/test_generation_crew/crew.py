@@ -9,8 +9,8 @@ syntax to ...
 from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 
-from src.constants import GUARDRAIL_MAX_RETRIES
-from src.test_generation_crew.llm_config import openrouter_llm
+from utgen.constants import GUARDRAIL_MAX_RETRIES
+from utgen.test_generation_crew.llm_config import openrouter_llm
 
 
 from pydantic import BaseModel

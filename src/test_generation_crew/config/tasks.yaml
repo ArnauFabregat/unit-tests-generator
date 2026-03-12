@@ -1,0 +1,27 @@
+# YAML-first task definitions
+generate_unit_tests_task:
+  description: >
+    Generate a pytest suite for the function described in the context below.
+    
+    CRITICAL INSTRUCTIONS:
+    1. **Target Code**: Focus on the source code under `### NODE INFO ###`.
+    2. **Mocking**: Use `### OUTGOING EDGES ###` to identify dependencies. 
+       Cross-reference with `### NEIGHBOR NODE DETAILS ###` to create 
+       accurate `unittest.mock` objects that return the correct types.
+    3. **Input Selection (Incoming Edges)**: Analyze `### INCOMING EDGES ###`. 
+       If other functions call this node, use those relationships to 
+       infer realistic input values, common arguments, and the 
+       expected state of the system before the call.
+    4. **Edge Cases**: Contrast the "intended use" (Incoming Edges) 
+       with the "allowed use" (Signature/Types) to find boundary 
+       conditions and potential crash points.
+    5. **Naming**: Use the `file::type::name` to determine the correct 
+       import paths for the test file.
+
+    CONTEXT FROM GRAPH:
+    {graph_context}
+  expected_output: >
+    A complete Python file with:
+    - All necessary imports and mocks.
+    - Parametrized test cases reflecting real-world usage found in Incoming Edges.
+    - Clear docsstrings explaining which graph relationship is being tested or mocked.

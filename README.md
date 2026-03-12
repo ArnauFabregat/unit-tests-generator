@@ -152,3 +152,4 @@ Open a terminal in VSCode and execute the following command:
 - Maybe helps adding usage examples to docstrings
 - Call to LLM with crewai or langchain
 - Run tests, auto-fix erros if not working
+- Not possible to run test on functions defined inside other functions, avoid this¿?!!

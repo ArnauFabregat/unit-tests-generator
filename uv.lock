@@ -2748,8 +2748,6 @@ dependencies = [
     { name = "crewai", extra = ["google-genai"] },
     { name = "litellm" },
     { name = "networkx" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
 ]
 
 [package.dev-dependencies]
@@ -2769,8 +2767,6 @@ requires-dist = [
     { name = "crewai", extras = ["google-genai"], specifier = ">=1.10.1" },
     { name = "litellm", specifier = ">=1.82.1" },
     { name = "networkx", specifier = ">=3.6.1" },
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "pytest-cov", specifier = ">=7.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2781,8 +2777,8 @@ dev = [
     { name = "ruff", specifier = ">=0.5" },
 ]
 test = [
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-cov", specifier = ">=5" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
 ]
 
 [[package]]

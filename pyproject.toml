@@ -8,8 +8,6 @@ dependencies = [
     "crewai[google-genai]>=1.10.1",
     "litellm>=1.82.1",
     "networkx>=3.6.1",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
 ]
 
 [dependency-groups]
@@ -22,8 +20,8 @@ dev = [
 ]
 # Only for testing workflows
 test = [
-  "pytest>=8",
-  "pytest-cov>=5",
+  "pytest>=9.0.2",
+  "pytest-cov>=7.0.0",
 ]
 
 [build-system]
@@ -36,6 +34,11 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+omit = [
+    "**/__init__.py",
+]
 
 # Ruff configuration (https://docs.astral.sh/ruff/configuration/)
 [tool.ruff]

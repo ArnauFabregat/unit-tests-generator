@@ -78,9 +78,9 @@ class TestGenerationCrew:
             description=task_config["description"],
             expected_output=task_config["expected_output"],
             agent=self.test_generator_agent(),
-            output_json=LLMTestOutput,
-            guardrail=validate_tests_schema,
-            guardrail_max_retries=self._guardrail_max_retries,
+            # output_json=LLMTestOutput,
+            # guardrail=validate_tests_schema,
+            # guardrail_max_retries=self._guardrail_max_retries,
         )
 
     @crew

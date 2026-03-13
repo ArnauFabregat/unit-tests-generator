@@ -11,7 +11,7 @@ import sys
 
 from loguru import logger
 
-from src.config.params import DEBUG_LOGS
+from utgen.config.params import DEBUG_LOGS
 
 # List of library names (e.g., 'chromadb', 'httpx') to silence
 DEPENDENCIES_WITH_LOGGING: list[str] = []
@@ -83,7 +83,7 @@ def setup_logger(debug: bool | None = None) -> None:
     # 3. File: Persistent storage (Matches base_level)
     # Configured with rotation (size-based) and retention (time-based)
     logger.add(
-        "data/logs/app.log",
+        "../data/logs/app.log",
         format=LOG_FORMAT,
         level=base_level,
         rotation="10 MB",

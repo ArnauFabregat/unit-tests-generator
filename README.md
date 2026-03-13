@@ -1,5 +1,18 @@
-# Unit tests generator with GraphRAG and LLM
-This repository ...
+# 🛡️ Unit-Tests-Generator
+*Autonomous, RAG-Driven Test Engineering for Python.*
+
+**Unit-Tests-Generator** is an intelligent agentic tool that automates the entire `pytest` lifecycle. Unlike static template generators, it leverages an in-memory knowledge graph of your codebase and RAG to produce context-aware, executable, and validated test suites.
+
+The system operates through a multi-stage pipeline:
+1. **Codebase Graphing**: Maps your repository into an in-memory graph to understand cross-file dependencies and type definitions.
+
+2. **Contextual RAG**: Retrieves relevant context for the LLM, ensuring the generated tests understand your project's unique patterns.
+
+3. **Inference & Guardrails**: Generates test cases via LLM API, filtered through strict structural and security guardrails.
+
+4. **The "Sandbox" Validation**: Automatically executes the generated tests.
+
+5. **Persistence**: Only tests that pass execution and meet coverage criteria are committed to your `/tests` directory.
 
 ## Table of Contents
 
@@ -26,24 +39,24 @@ To extract relevant context, the graph needs:
 - Nested functions
 
 Fields:
-- id: canonical ID (e.g., file::...::class::Calibrator / ...::method::Calibrator.fit)
-- type: "file" | "class" | "method" | "function"
-- name: symbol name ("Calibrator", "fit", etc.)
-- file: file path
-- signature: normalized function/method signature "def fit(self, probs, y) -> None"
-- docstring: (trimmed) docstring
-- source: actual source code of the node
+- **id**: canonical ID (e.g., file::...::class::Calibrator / ...::method::Calibrator.fit)
+- **type**: "file" | "class" | "method" | "function"
+- **name**: symbol name ("Calibrator", "fit", etc.)
+- **file**: file path
+- **signature**: normalized function/method signature "def fit(self, probs, y) -> None"
+- **docstring**: (trimmed) docstring
+- **source**: actual source code of the node
 
 ### ➡️ Edges for:
-- "defines" (file → symbol, function → nested function)
-- "has_method" (class → method)
-- "calls" (function/method → called symbol)
-- "references" (function/method → referenced symbol)
+- **defines** (file → symbol, function → nested function)
+- **has_method** (class → method)
+- **calls** (function/method → called symbol)
+- **references** (function/method → referenced symbol)
 
 Fields:
-- src: source node id
-- dst: destination node id
-- rel: "defines" | "has_method" | "references" | "calls"
+- **src**: source node id
+- **dst**: destination node id
+- **rel**: "defines" | "has_method" | "references" | "calls"
 
 ### 🧠 Prompt template
 TBD

@@ -150,9 +150,8 @@ Open a terminal in VSCode and execute the following command:
 
 ## TODO
 - Maybe helps adding usage examples to docstrings
-- Call to LLM with crewai or langchain
+- Try to improve the crewai prompt
 - Run tests, auto-fix erros if not working
 - Not possible to run test on functions defined inside other functions, avoid this¿?!!
 - Try to relate as "has_method" when function is defined inside another one
 - Not pass the inner defined functions as outgoing edges or neighbor context and don't create specific unit tests.
-- Add logger

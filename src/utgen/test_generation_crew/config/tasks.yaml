@@ -21,7 +21,10 @@ generate_unit_tests_task:
     CONTEXT FROM GRAPH:
     {graph_context}
   expected_output: >
-    A complete Python file with:
-    - All necessary imports and mocks.
-    - Parametrized test cases reflecting real-world usage found in Incoming Edges.
-    - Clear docsstrings explaining which graph relationship is being tested or mocked.
+    A structured JSON object mapped to the LLMTestOutput schema: {'tests': {'ID': TestCase}}
+    It must contain 'tests' where each item includes:
+    - 'name': A descriptive string for the test function (e.g., 'test_api_connection_timeout').
+    - 'imports': All necessary import statements specifically required for this test case 
+       (e.g., 'import pytest, from unittest.mock import Mock').
+    - 'code': The complete source code of the test function.
+    The output must be valid Python-parseable code without any conversational filler.

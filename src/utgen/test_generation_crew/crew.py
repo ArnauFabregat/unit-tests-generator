@@ -11,12 +11,8 @@ from crewai.project import CrewBase, agent, crew, task
 
 from utgen.constants import GUARDRAIL_MAX_RETRIES
 from utgen.test_generation_crew.llm_config import openrouter_llm
-
-
-from pydantic import BaseModel
-
-class TestOutput(BaseModel):
-    code: str
+from utgen.test_generation_crew.schemas import LLMTestOutput
+from utgen.test_generation_crew.guardrails import validate_tests_schema
 
 
 @CrewBase
@@ -82,9 +78,9 @@ class TestGenerationCrew:
             description=task_config["description"],
             expected_output=task_config["expected_output"],
             agent=self.test_generator_agent(),
-            # output_json=TestOutput,
-            # guardrail=validate_classifier_output,
-            # guardrail_max_retries=self._guardrail_max_retries,
+            output_json=LLMTestOutput,
+            guardrail=validate_tests_schema,
+            guardrail_max_retries=self._guardrail_max_retries,
         )
 
     @crew

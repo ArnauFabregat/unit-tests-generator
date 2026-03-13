@@ -46,3 +46,4 @@ launch.json
 
 # pytest
 .coverage
+.pytest_cache/

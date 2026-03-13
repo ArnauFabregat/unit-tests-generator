@@ -23,6 +23,7 @@ To extract relevant context, the graph needs:
 - Classes
 - Functions
 - Methods
+- Nested functions
 
 Fields:
 - id: canonical ID (e.g., file::...::class::Calibrator / ...::method::Calibrator.fit)
@@ -34,7 +35,7 @@ Fields:
 - source: actual source code of the node
 
 ### ➡️ Edges for:
-- "defines" (file → symbol)
+- "defines" (file → symbol, function → nested function)
 - "has_method" (class → method)
 - "calls" (function/method → called symbol)
 - "references" (function/method → referenced symbol)
@@ -152,6 +153,4 @@ Open a terminal in VSCode and execute the following command:
 - Maybe helps adding usage examples to docstrings
 - Try to improve the crewai prompt
 - Run tests, auto-fix erros if not working
-- Not possible to run test on functions defined inside other functions, avoid this¿?!!
-- Try to relate as "has_method" when function is defined inside another one
-- Not pass the inner defined functions as outgoing edges or neighbor context and don't create specific unit tests.
+- Not pass the nested functions as outgoing edges or neighbor context and don't create specific unit tests for them.

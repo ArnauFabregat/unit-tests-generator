@@ -154,3 +154,4 @@ Open a terminal in VSCode and execute the following command:
 - Try to improve the crewai prompt
 - Run tests, auto-fix erros if not working
 - Not pass the nested functions as outgoing edges or neighbor context and don't create specific unit tests for them.
+- Check bug in crewai if output_json passed or guardrails

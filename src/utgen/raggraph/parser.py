@@ -10,11 +10,12 @@ class CodeGraphBuilder1(ast.NodeVisitor):
     Adds edges for: defines, has_method (class→method), and nested defines.
     """
 
-    def __init__(self, file_path, graph):
+    def __init__(self, code_path, file_path, graph):
         self.file_path = file_path
+        self.file_path_clean = file_path.removeprefix(f'{code_path}/')
         self.graph = graph
 
-        self.current_file_id = canonical_id(file_path)
+        self.current_file_id = canonical_id(self.file_path_clean)
         self.current_class = None
         self.function_stack = []
         self.current_scope = None
@@ -23,8 +24,8 @@ class CodeGraphBuilder1(ast.NodeVisitor):
         self.graph.add_node(
             self.current_file_id,
             type="file",
-            name=os.path.basename(file_path),
-            file=file_path,
+            name=os.path.basename(self.file_path_clean),
+            file=self.file_path_clean,
             signature="None",
             docstring="None",
             source=open(file_path).read()
@@ -34,13 +35,13 @@ class CodeGraphBuilder1(ast.NodeVisitor):
     # Classes
     # ---------------------
     def visit_ClassDef(self, node):
-        class_id = canonical_id(self.file_path, "class", node.name)
+        class_id = canonical_id(self.file_path_clean, "class", node.name)
 
         self.graph.add_node(
             class_id,
             type="class",
             name=node.name,
-            file=self.file_path,
+            file=self.file_path_clean,
             signature=node.name or "None",
             docstring=ast.get_docstring(node) or "None",
             source=get_source_segment(self.file_path, node)
@@ -73,14 +74,14 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             parent_type = "function"
             name = node.name
 
-        fn_id = canonical_id(self.file_path, parent_type, name)
+        fn_id = canonical_id(self.file_path_clean, parent_type, name)
 
         # Create node
         self.graph.add_node(
             fn_id,
             type=parent_type,
             name=name,
-            file=self.file_path,
+            file=self.file_path_clean,
             signature=normalize_signature(node) or "None",
             docstring=ast.get_docstring(node) or "None",
             source=get_source_segment(self.file_path, node)
@@ -109,11 +110,12 @@ class CodeGraphBuilder2(ast.NodeVisitor):
     """
     Second pass: detect both calls and references.
     """
-    def __init__(self, file_path, graph):
+    def __init__(self, code_path, file_path, graph):
         self.file_path = file_path
+        self.file_path_clean = file_path.removeprefix(f'{code_path}/')
         self.graph = graph
 
-        self.current_file_id = canonical_id(file_path)
+        self.current_file_id = canonical_id(self.file_path_clean)
         self.current_class = None
         self.function_stack = []   # NEW
         self.current_scope = None
@@ -129,7 +131,7 @@ class CodeGraphBuilder2(ast.NodeVisitor):
     # Class
     # -------------------
     def visit_ClassDef(self, node):
-        class_id = canonical_id(self.file_path, "class", node.name)
+        class_id = canonical_id(self.file_path_clean, "class", node.name)
         prev = self.current_class
         self.current_class = class_id
         self.generic_visit(node)
@@ -153,7 +155,7 @@ class CodeGraphBuilder2(ast.NodeVisitor):
             parent_type = "function"
             name = node.name
 
-        fn_id = canonical_id(self.file_path, parent_type, name)
+        fn_id = canonical_id(self.file_path_clean, parent_type, name)
 
         self.function_stack.append(fn_id)
         prev = self.current_scope

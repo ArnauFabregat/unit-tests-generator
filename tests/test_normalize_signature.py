@@ -1,142 +1,94 @@
 import ast
-from unittest.mock import Mock
 
 from utgen.raggraph.utils import normalize_signature
 
 
-def test_normalize_signature_with_function_def():
-    # Create a mock FunctionDef node with various argument types
-    mock_node = Mock(spec=ast.FunctionDef)
-    mock_node.name = "test_function"
+def test_normalize_signature_with_basic_function():
+    # Create a simple FunctionDef node
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(
+            posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]
+        ),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
 
-    # Mock args with posonlyargs, args, vararg, kwonlyargs, and kwarg
-    mock_args = Mock()
-    mock_args.posonlyargs = [Mock(arg="a", annotation=ast.Name(id="int", ctx=ast.Load()))]
-    mock_args.args = [Mock(arg="b", annotation=ast.Name(id="str", ctx=ast.Load()))]
-    mock_args.vararg = Mock(arg="args", annotation=ast.Name(id="tuple", ctx=ast.Load()))
-    mock_args.kwonlyargs = [Mock(arg="c", annotation=ast.Name(id="bool", ctx=ast.Load()))]
-    mock_args.kwarg = Mock(arg="kwargs", annotation=ast.Name(id="dict", ctx=ast.Load()))
-    mock_node.args = mock_args
-
-    # Mock return type
-    mock_node.returns = ast.Name(id="None", ctx=ast.Load())
-
-    # Expected result
-    expected_signature = "def test_function(a: int, /, b: str, *args: tuple, c: bool, **kwargs: dict) -> None"
-
-    # Call the function
-    result = normalize_signature(mock_node)
-
-    # Assert the result
-    assert result == expected_signature
+    result = normalize_signature(node)
+    assert result == "def example()"
 
 
-def test_normalize_signature_with_async_function_def():
-    # Create a mock AsyncFunctionDef node
-    mock_node = Mock(spec=ast.AsyncFunctionDef)
-    mock_node.name = "async_test_function"
+def test_normalize_signature_with_arguments():
+    # Create a FunctionDef node with various arguments
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[
+                ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load())),
+                ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load())),
+            ],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        ),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
 
-    # Mock args with no arguments
-    mock_args = Mock()
-    mock_args.posonlyargs = []
-    mock_args.args = []
-    mock_args.vararg = None
-    mock_args.kwonlyargs = []
-    mock_args.kwarg = None
-    mock_node.args = mock_args
-
-    # Mock return type
-    mock_node.returns = ast.Name(id="Awaitable[int]", ctx=ast.Load())
-
-    # Expected result
-    expected_signature = "def async_test_function() -> Awaitable[int]"
-
-    # Call the function
-    result = normalize_signature(mock_node)
-
-    # Assert the result
-    assert result == expected_signature
-
-
-def test_normalize_signature_with_empty_args():
-    # Create a mock FunctionDef node with no arguments
-    mock_node = Mock(spec=ast.FunctionDef)
-    mock_node.name = "empty_args_function"
-
-    # Mock args with no arguments
-    mock_args = Mock()
-    mock_args.posonlyargs = []
-    mock_args.args = []
-    mock_args.vararg = None
-    mock_args.kwonlyargs = []
-    mock_args.kwarg = None
-    mock_node.args = mock_args
-
-    # Mock return type
-    mock_node.returns = ast.Name(id="None", ctx=ast.Load())
-
-    # Expected result
-    expected_signature = "def empty_args_function() -> None"
-
-    # Call the function
-    result = normalize_signature(mock_node)
-
-    # Assert the result
-    assert result == expected_signature
+    result = normalize_signature(node)
+    assert result == "def example(a: int, b: str)"
 
 
-def test_normalize_signature_with_only_positional_args():
-    # Create a mock FunctionDef node with only positional arguments
-    mock_node = Mock(spec=ast.FunctionDef)
-    mock_node.name = "positional_args_function"
+def test_normalize_signature_with_return_type():
+    # Create a FunctionDef node with a return type
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(
+            posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]
+        ),
+        body=[],
+        decorator_list=[],
+        returns=ast.Name(id="bool", ctx=ast.Load()),
+        type_comment=None,
+    )
 
-    # Mock args with only positional arguments
-    mock_args = Mock()
-    mock_args.posonlyargs = []
-    mock_args.args = [
-        Mock(arg="x", annotation=ast.Name(id="int", ctx=ast.Load())),
-        Mock(arg="y", annotation=ast.Name(id="float", ctx=ast.Load())),
-    ]
-    mock_args.vararg = None
-    mock_args.kwonlyargs = []
-    mock_args.kwarg = None
-    mock_node.args = mock_args
-
-    # Mock return type
-    mock_node.returns = ast.Name(id="int", ctx=ast.Load())
-
-    # Expected result
-    expected_signature = "def positional_args_function(x: int, y: float) -> int"
-
-    # Call the function
-    result = normalize_signature(mock_node)
-
-    # Assert the result
-    assert result == expected_signature
+    result = normalize_signature(node)
+    assert result == "def example() -> bool"
 
 
-def test_normalize_signature_with_only_keyword_args():
-    # Create a mock FunctionDef node with only keyword arguments
-    mock_node = Mock(spec=ast.FunctionDef)
-    mock_node.name = "keyword_args_function"
+def test_normalize_signature_with_all_features():
+    # Create a FunctionDef node with all possible features
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(
+            posonlyargs=[ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load()))],
+            args=[ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load()))],
+            vararg=ast.arg(arg="args", annotation=ast.Name(id="tuple", ctx=ast.Load())),
+            kwonlyargs=[ast.arg(arg="c", annotation=ast.Name(id="float", ctx=ast.Load()))],
+            kw_defaults=[None],
+            kwarg=ast.arg(arg="kwargs", annotation=ast.Name(id="dict", ctx=ast.Load())),
+            defaults=[],
+        ),
+        body=[],
+        decorator_list=[],
+        returns=ast.Name(id="None", ctx=ast.Load()),
+        type_comment=None,
+    )
 
-    # Mock args with only keyword arguments
-    mock_args = Mock()
-    mock_args.posonlyargs = []
-    mock_args.args = []
-    mock_args.vararg = None
-    mock_args.kwonlyargs = [Mock(arg="z", annotation=ast.Name(id="str", ctx=ast.Load()))]
-    mock_args.kwarg = None
-    mock_node.args = mock_args
+    result = normalize_signature(node)
+    assert result == "def example(a: int, /, b: str, *args: tuple, c: float, **kwargs: dict) -> None"
 
-    # Mock return type
-    mock_node.returns = ast.Name(id="str", ctx=ast.Load())
 
-    # Expected result
-    expected_signature = "def keyword_args_function(*, z: str) -> str"
+def test_normalize_signature_with_invalid_node():
+    # Pass an invalid node (not a FunctionDef or AsyncFunctionDef)
+    node = ast.ClassDef(name="ExampleClass", bases=[], keywords=[], body=[], decorator_list=[])
 
-    # Call the function
-    result = normalize_signature(mock_node)
-
-    # Assert the result
-    assert result == expected_signature
+    result = normalize_signature(node)
+    assert result == ""

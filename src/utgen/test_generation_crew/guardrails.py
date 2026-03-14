@@ -41,9 +41,13 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
         or descriptive error feedback (on failure).
     """
     logger.debug(f"Guardrail input:\n{result.raw}")
+    # Split into lines, slice from index 1 to -1, then rejoin
+    lines = result.raw.splitlines()
+    test_content = "\n".join(lines[1:-1])
+
     # 1. Validate JSON
     try:
-        data = json.loads(result.raw)
+        data = json.loads(test_content)
     except json.JSONDecodeError:
         logger.warning("Guardrail `validate_tests_schema` triggered: invalid JSON format")
         return (False, "Invalid JSON format. Please fix")

@@ -11,7 +11,6 @@ from crewai.project import CrewBase, agent, crew, task
 
 from utgen.constants import GUARDRAIL_MAX_RETRIES
 from utgen.test_generation_crew.llm_config import openrouter_llm
-from utgen.test_generation_crew.schemas import LLMTestOutput
 from utgen.test_generation_crew.guardrails import validate_tests_schema
 
 
@@ -78,9 +77,8 @@ class TestGenerationCrew:
             description=task_config["description"],
             expected_output=task_config["expected_output"],
             agent=self.test_generator_agent(),
-            # output_json=LLMTestOutput,
-            # guardrail=validate_tests_schema,
-            # guardrail_max_retries=self._guardrail_max_retries,
+            guardrail=validate_tests_schema,
+            guardrail_max_retries=self._guardrail_max_retries,
         )
 
     @crew
@@ -93,7 +91,7 @@ class TestGenerationCrew:
         """
         return Crew(
             name="Test generation crew",
-            agents=[self.test_generator_agent()],
-            tasks=[self.generate_unit_tests_task()],
+            agents=self.agents,
+            tasks=self.tasks,
             verbose=self._verbose,
         )

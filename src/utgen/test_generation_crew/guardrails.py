@@ -11,6 +11,7 @@ dangerous functions detection and pytest compatibility checks.
 - Validar compatibilitat amb pytest: if not v.strip().startswith("def test_")
 """
 
+import ast
 import json
 from typing import Any
 
@@ -41,35 +42,53 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
         or descriptive error feedback (on failure).
     """
     logger.debug(f"Guardrail input:\n{result.raw}")
-    # Split into lines, slice from index 1 to -1, then rejoin
-    lines = result.raw.splitlines()
-    test_content = "\n".join(lines[1:-1])
+
+    # 0. Basic Cleaning
+    raw_content = result.raw.strip()
+    if raw_content.startswith("```json"):
+        raw_content = raw_content.replace("```json", "", 1).replace("```", "", 1).strip()
+    elif raw_content.startswith("```"):
+        raw_content = raw_content.replace("```", "", 2).strip()
 
     # 1. Validate JSON
     try:
-        data = json.loads(test_content)
+        data = json.loads(raw_content)
     except json.JSONDecodeError:
         logger.warning("Guardrail `validate_tests_schema` triggered: invalid JSON format")
         return (False, "Invalid JSON format. Please fix")
 
     errors: list[str] = []
 
-    # 1. Validate first nesting level
+    # 2. Validate first nesting level
     if "tests" not in data or not isinstance(data["tests"], dict):
         logger.warning("Guardrail `validate_tests_schema` triggered: missing or invalid 'tests' key")
         return (False, "Missing or invalid 'tests' key. Expected: {'tests': {'ID': {...}}}")
 
-    # 2. Deep Dive into each test entry
+    # 3. Deep Dive: Schema + Syntax
     for test_id, content in data["tests"].items():
+        # A. Pydantic Validation
         try:
-            # Use Pydantic to validate the inner object
-            # This checks types, missing fields, and extra fields in one go
             TestCase.model_validate(content)
         except Exception as e:
-            # Pydantic's error messages are very descriptive for LLMs
-            errors.append(f"Test '{test_id}' validation error: {str(e)}")
+            errors.append(f"Test '{test_id}' schema error: {str(e)}")
+            continue
 
-    # TODO additional checks: puython syntax, pytest compatibility, dangerous functions, etc.
+        # B. Python Syntax Check
+        # Assuming the 'content' dict has a key like 'code' or 'content' containing the Python string
+        python_imports = content.get("imports", "") 
+        if python_imports:
+            try:
+                ast.parse(python_imports)
+            except SyntaxError as e:
+                errors.append(f"Test '{test_id}' syntax error: {e.msg} at line {e.lineno}")
+
+        python_code = content.get("code", "") 
+        if python_code:
+            try:
+                ast.parse(python_code)
+            except SyntaxError as e:
+                errors.append(f"Test '{test_id}' syntax error: {e.msg} at line {e.lineno}")
+    # TODO additional checks: pytest compatibility, dangerous functions, etc.
 
     # 3. Return
     if errors:

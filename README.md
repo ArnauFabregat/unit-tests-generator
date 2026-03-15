@@ -40,7 +40,7 @@ To extract relevant context, the graph needs:
 
 Fields:
 - **id**: canonical ID (e.g., file::...::class::Calibrator / ...::method::Calibrator.fit)
-- **type**: "file" | "class" | "method" | "function"
+- **type**: "file" | "class" | "method" | "function" | "nested_function"
 - **name**: symbol name ("Calibrator", "fit", etc.)
 - **file**: file path
 - **signature**: normalized function/method signature "def fit(self, probs, y) -> None"
@@ -163,10 +163,9 @@ Open a terminal in VSCode and execute the following command:
 * `uv sync`
 
 ## TODO
-- Maybe helps adding usage examples to docstrings
-- Try to improve the crewai prompt
-- Not pass the nested functions as outgoing edges or neighbor context and don't create specific unit tests for them.
 - Study the possibility to run the tests in docker isolated environment for safety
 - Add a final process that re arrange the tests directory in one test.py per src file using the graph info
 - Add the remaining guardrails
 - Replace crewai by langgraph
+- Add license
+- Publish to PyPI

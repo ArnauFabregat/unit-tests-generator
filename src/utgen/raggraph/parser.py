@@ -28,7 +28,7 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             file=self.file_path_clean,
             signature="None",
             docstring="None",
-            source=open(file_path).read()
+            source=open(file_path, "r", encoding="utf-8", errors="replace").read()
         )
 
     # ---------------------

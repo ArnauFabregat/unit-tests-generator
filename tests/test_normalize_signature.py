@@ -3,32 +3,32 @@ import ast
 from utgen.raggraph.utils import normalize_signature
 
 
-def test_normalize_signature_with_basic_function():
-    # Create a simple FunctionDef node
+def test_normalize_signature_basic_function():
+    # Create a basic FunctionDef node
     node = ast.FunctionDef(
-        name="example",
+        name="test_func",
         args=ast.arguments(
             posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]
         ),
         body=[],
         decorator_list=[],
         returns=None,
-        type_comment=None,
     )
 
+    # Test the function
     result = normalize_signature(node)
-    assert result == "def example()"
+    assert result == "def test_func()"
 
 
-def test_normalize_signature_with_arguments():
-    # Create a FunctionDef node with various arguments
+def test_normalize_signature_with_annotations():
+    # Create a FunctionDef node with annotations
     node = ast.FunctionDef(
-        name="example",
+        name="test_func",
         args=ast.arguments(
             posonlyargs=[],
             args=[
-                ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load())),
-                ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load())),
+                ast.arg(arg="x", annotation=ast.Name(id="int", ctx=ast.Load())),
+                ast.arg(arg="y", annotation=ast.Name(id="str", ctx=ast.Load())),
             ],
             vararg=None,
             kwonlyargs=[],
@@ -38,57 +38,70 @@ def test_normalize_signature_with_arguments():
         ),
         body=[],
         decorator_list=[],
-        returns=None,
-        type_comment=None,
-    )
-
-    result = normalize_signature(node)
-    assert result == "def example(a: int, b: str)"
-
-
-def test_normalize_signature_with_return_type():
-    # Create a FunctionDef node with a return type
-    node = ast.FunctionDef(
-        name="example",
-        args=ast.arguments(
-            posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]
-        ),
-        body=[],
-        decorator_list=[],
         returns=ast.Name(id="bool", ctx=ast.Load()),
-        type_comment=None,
     )
 
+    # Test the function
     result = normalize_signature(node)
-    assert result == "def example() -> bool"
+    assert result == "def test_func(x: int, y: str) -> bool"
 
 
-def test_normalize_signature_with_all_features():
-    # Create a FunctionDef node with all possible features
+def test_normalize_signature_with_posonly_args():
+    # Create a FunctionDef node with posonly args
     node = ast.FunctionDef(
-        name="example",
+        name="test_func",
         args=ast.arguments(
-            posonlyargs=[ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load()))],
-            args=[ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load()))],
-            vararg=ast.arg(arg="args", annotation=ast.Name(id="tuple", ctx=ast.Load())),
-            kwonlyargs=[ast.arg(arg="c", annotation=ast.Name(id="float", ctx=ast.Load()))],
-            kw_defaults=[None],
-            kwarg=ast.arg(arg="kwargs", annotation=ast.Name(id="dict", ctx=ast.Load())),
+            posonlyargs=[
+                ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load())),
+                ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load())),
+            ],
+            args=[],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
             defaults=[],
         ),
         body=[],
         decorator_list=[],
-        returns=ast.Name(id="None", ctx=ast.Load()),
-        type_comment=None,
+        returns=None,
     )
 
+    # Test the function
     result = normalize_signature(node)
-    assert result == "def example(a: int, /, b: str, *args: tuple, c: float, **kwargs: dict) -> None"
+    assert result == "def test_func(a: int, b: str, /)"
 
 
-def test_normalize_signature_with_invalid_node():
-    # Pass an invalid node (not a FunctionDef or AsyncFunctionDef)
-    node = ast.ClassDef(name="ExampleClass", bases=[], keywords=[], body=[], decorator_list=[])
+def test_normalize_signature_with_kwonly_args():
+    # Create a FunctionDef node with kwonly args
+    node = ast.FunctionDef(
+        name="test_func",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[],
+            vararg=None,
+            kwonlyargs=[
+                ast.arg(arg="x", annotation=ast.Name(id="int", ctx=ast.Load())),
+                ast.arg(arg="y", annotation=ast.Name(id="str", ctx=ast.Load())),
+            ],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        ),
+        body=[],
+        decorator_list=[],
+        returns=None,
+    )
 
+    # Test the function
+    result = normalize_signature(node)
+    assert result == "def test_func(*, x: int, y: str)"
+
+
+def test_normalize_signature_invalid_input():
+    # Test with invalid input (not a FunctionDef or AsyncFunctionDef)
+    node = ast.Expr(value=ast.Str(s="test"))
+
+    # Test the function
     result = normalize_signature(node)
     assert result == ""

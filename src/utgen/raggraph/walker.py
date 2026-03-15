@@ -26,12 +26,12 @@ def iter_python_files(path, skip_init=True):
 def build_graph_from_directory(code_path: str, skip_init: bool = True, save_graph: bool = False, save_path: str = ""):
     graph = nx.DiGraph()
     for file_path in iter_python_files(code_path, skip_init=skip_init):
-        tree = ast.parse(open(file_path, "r", encoding="utf-8").read())
+        tree = ast.parse(open(file_path, "r", encoding="utf-8", errors="replace").read())
         builder = CodeGraphBuilder1(code_path, file_path, graph)
         builder.visit(tree)
 
     for file_path in iter_python_files(code_path, skip_init=skip_init):
-        tree = ast.parse(open(file_path, "r", encoding="utf-8").read())
+        tree = ast.parse(open(file_path, "r", encoding="utf-8", errors="replace").read())
         builder = CodeGraphBuilder2(code_path, file_path, graph)
         builder.attach_parents(tree)
         builder.visit(tree)

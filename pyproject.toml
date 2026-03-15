@@ -9,6 +9,8 @@ dependencies = [
     "litellm>=1.82.1",
     "loguru>=0.7.3",
     "networkx>=3.6.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
 ]
 
 [dependency-groups]
@@ -18,11 +20,6 @@ dev = [
   "ruff>=0.5",
   "mypy>=1.8",
   "ipykernel>=7.2.0",
-]
-# Only for testing workflows
-test = [
-  "pytest>=9.0.2",
-  "pytest-cov>=7.0.0",
 ]
 
 [build-system]

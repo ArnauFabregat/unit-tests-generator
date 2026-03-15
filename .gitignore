@@ -47,3 +47,6 @@ launch.json
 # pytest
 .coverage
 .pytest_cache/
+
+# Validation temp files
+temp_*.py

@@ -165,6 +165,7 @@ Open a terminal in VSCode and execute the following command:
 ## TODO
 - Maybe helps adding usage examples to docstrings
 - Try to improve the crewai prompt
-- Run tests, auto-fix erros if not working
 - Not pass the nested functions as outgoing edges or neighbor context and don't create specific unit tests for them.
-- Check bug in crewai if output_json passed or guardrails
+- Study the possibility to run the tests in docker isolated environment for safety
+- Add a final process that re arrange the tests directory in one test.py per src file using the graph info
+- Add the remaining guardrails

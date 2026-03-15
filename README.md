@@ -165,6 +165,7 @@ Open a terminal in VSCode and execute the following command:
 ## TODO
 - Study the possibility to run the tests in docker isolated environment for safety
 - Add a final process that re arrange the tests directory in one test.py per src file using the graph info
+- Run pytest cov as last step
 - Add the remaining guardrails
 - Replace crewai by langgraph
 - Add license

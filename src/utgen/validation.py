@@ -17,9 +17,9 @@ def validate_individual_test(import_code: str, test_code: str) -> bool:
     full_code = f"{import_code}\n\n{test_code}"
 
     # Write the combined code to a temporary file
-    with open(temp_filename, "w") as f:
+    with open(temp_filename, "w", encoding="utf-8", errors="replace") as f:
         f.write(full_code)
-    
+
     # Execute pytest. 
     # -q: quiet mode
     # --tb=no: disable traceback to keep console clean
@@ -65,7 +65,7 @@ def save_and_clean_tests(
     # We join with newlines to ensure clean separation
     final_content = "\n".join(import_block) + "\n\n" + "\n\n".join(test_block)
 
-    with open(destination, "w") as f:
+    with open(destination, "w", encoding="utf-8", errors="replace") as f:
         f.write(final_content)
 
     # 3. Use Ruff to organize and clean the generated file

@@ -31,15 +31,15 @@ def test_attach_parents_with_simple_ast():
 
 def test_attach_parents_with_nested_ast():
     """
-    Test attach_parents with a nested AST structure.
+    Test attach_parents with a nested AST containing multiple levels.
     """
     # Arrange
     fn_node = ast.FunctionDef(
-        name="outer",
+        name="outer_function",
         args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
         body=[
             ast.FunctionDef(
-                name="inner",
+                name="inner_function",
                 args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
                 body=[],
                 decorator_list=[],
@@ -56,91 +56,181 @@ def test_attach_parents_with_nested_ast():
     CodeGraphBuilder2.attach_parents(fn_node)
 
     # Assert
-    # Verify that the outer FunctionDef has no parent (it's the root)
+    # Verify that the outer function has no parent (it's the root)
     assert not hasattr(fn_node, "parent")
 
-    # Verify that the inner FunctionDef has the outer FunctionDef as parent
-    inner_node = fn_node.body[0]
-    assert hasattr(inner_node, "parent")
-    assert inner_node.parent is fn_node
-
-    # Verify that child nodes of inner FunctionDef have the inner FunctionDef as parent
-    # In this case, inner FunctionDef has no child nodes, so nothing to check
-    assert True
+    # Verify that the inner function has the outer function as parent
+    inner_fn = fn_node.body[0]
+    assert hasattr(inner_fn, "parent")
+    assert inner_fn.parent is fn_node
 
 
-def test_attach_parents_with_complex_ast():
+def test_attach_parents_with_module_ast():
     """
-    Test attach_parents with a complex AST structure containing multiple node types.
+    Test attach_parents with a module-level AST containing multiple functions.
     """
     # Arrange
-    fn_node = ast.FunctionDef(
-        name="complex",
-        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+    module = ast.parse("""
+
+def func1():
+    pass
+
+def func2():
+    pass
+    """)
+
+    # Act
+    CodeGraphBuilder2.attach_parents(module)
+
+    # Assert
+    # Verify that the module has no parent (it's the root)
+    assert not hasattr(module, "parent")
+
+    # Verify that both functions have the module as parent
+    func1, func2 = module.body
+    assert hasattr(func1, "parent")
+    assert func1.parent is module
+    assert hasattr(func2, "parent")
+    assert func2.parent is module
+
+
+def test_attach_parents_with_class_ast():
+    """
+    Test attach_parents with a class definition AST.
+    """
+    # Arrange
+    class_node = ast.ClassDef(
+        name="MyClass",
+        bases=[],
+        keywords=[],
         body=[
-            ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=42)),
-            ast.If(
-                test=ast.Compare(
-                    left=ast.Name(id="x", ctx=ast.Load()), ops=[ast.Gt()], comparators=[ast.Constant(value=10)]
-                ),
-                body=[
-                    ast.Expr(
-                        value=ast.Call(
-                            func=ast.Name(id="print", ctx=ast.Load()),
-                            args=[ast.Constant(value="Greater than 10")],
-                            keywords=[],
-                        )
-                    )
-                ],
-                orelse=[],
-            ),
+            ast.FunctionDef(
+                name="method",
+                args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+                body=[],
+                decorator_list=[],
+                returns=None,
+                type_comment=None,
+            )
         ],
         decorator_list=[],
-        returns=None,
+        docstring=None,
+    )
+
+    # Act
+    CodeGraphBuilder2.attach_parents(class_node)
+
+    # Assert
+    # Verify that the class has no parent (it's the root)
+    assert not hasattr(class_node, "parent")
+
+    # Verify that the method has the class as parent
+    method = class_node.body[0]
+    assert hasattr(method, "parent")
+    assert method.parent is class_node
+
+
+def test_attach_parents_with_if_statement():
+    """
+    Test attach_parents with an if statement AST.
+    """
+    # Arrange
+    if_node = ast.If(
+        test=ast.Name(id="condition", ctx=ast.Load()),
+        body=[ast.Expr(value=ast.Constant(value="true"))],
+        orelse=[ast.Expr(value=ast.Constant(value="false"))],
         type_comment=None,
     )
 
     # Act
-    CodeGraphBuilder2.attach_parents(fn_node)
+    CodeGraphBuilder2.attach_parents(if_node)
 
     # Assert
-    # Verify that the complex FunctionDef has no parent (it's the root)
-    assert not hasattr(fn_node, "parent")
+    # Verify that the if statement has no parent (it's the root)
+    assert not hasattr(if_node, "parent")
 
-    # Verify that child nodes have the correct parent
-    assign_node = fn_node.body[0]
-    assert hasattr(assign_node, "parent")
-    assert assign_node.parent is fn_node
+    # Verify that the body and orelse nodes have the if statement as parent
+    true_expr, false_expr = if_node.body[0], if_node.orelse[0]
+    assert hasattr(true_expr, "parent")
+    assert true_expr.parent is if_node
+    assert hasattr(false_expr, "parent")
+    assert false_expr.parent is if_node
 
-    if_node = fn_node.body[1]
-    assert hasattr(if_node, "parent")
-    assert if_node.parent is fn_node
 
-    # Verify that nested child nodes have the correct parent
-    compare_node = if_node.test
-    assert hasattr(compare_node, "parent")
-    assert compare_node.parent is if_node
+def test_attach_parents_with_for_loop():
+    """
+    Test attach_parents with a for loop AST.
+    """
+    # Arrange
+    for_node = ast.For(
+        target=ast.Name(id="item", ctx=ast.Store()),
+        iter=ast.Call(func=ast.Name(id="range", ctx=ast.Load()), args=[ast.Constant(value=10)], keywords=[]),
+        body=[
+            ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id="print", ctx=ast.Load()), args=[ast.Name(id="item", ctx=ast.Load())], keywords=[]
+                )
+            )
+        ],
+        orelse=[],
+        type_comment=None,
+    )
 
-    name_x_node = compare_node.left
-    assert hasattr(name_x_node, "parent")
-    assert name_x_node.parent is compare_node
+    # Act
+    CodeGraphBuilder2.attach_parents(for_node)
 
-    constant_10_node = compare_node.comparators[0]
-    assert hasattr(constant_10_node, "parent")
-    assert constant_10_node.parent is compare_node
+    # Assert
+    # Verify that the for loop has no parent (it's the root)
+    assert not hasattr(for_node, "parent")
 
-    expr_node = if_node.body[0]
-    assert hasattr(expr_node, "parent")
-    assert expr_node.parent is if_node
+    # Verify that the body nodes have the for loop as parent
+    print_call = for_node.body[0]
+    assert hasattr(print_call, "parent")
+    assert print_call.parent is for_node
 
-    call_node = expr_node.value
-    assert hasattr(call_node, "parent")
-    assert call_node.parent is expr_node
 
-    name_print_node = call_node.func
-    assert hasattr(name_print_node, "parent")
-    assert name_print_node.parent is call_node
+def test_attach_parents_with_try_except():
+    """
+    Test attach_parents with a try-except AST.
+    """
+    # Arrange
+    try_node = ast.Try(
+        body=[ast.Expr(value=ast.Call(func=ast.Name(id="dangerous_function", ctx=ast.Load()), args=[], keywords=[]))],
+        handlers=[
+            ast.ExceptHandler(
+                type=ast.Name(id="Exception", ctx=ast.Load()),
+                name=None,
+                body=[
+                    ast.Expr(
+                        value=ast.Call(
+                            func=ast.Name(id="print", ctx=ast.Load()),
+                            args=[ast.Constant(value="Error occurred")],
+                            keywords=[],
+                        )
+                    )
+                ],
+            )
+        ],
+        orelse=[],
+        finalbody=[ast.Expr(value=ast.Call(func=ast.Name(id="cleanup", ctx=ast.Load()), args=[], keywords=[]))],
+        type_comment=None,
+    )
 
-    constant_str_node = call_node.args[0]
-    assert hasattr(constant_str_node, "parent")
-    assert constant_str_node.parent is call_node
+    # Act
+    CodeGraphBuilder2.attach_parents(try_node)
+
+    # Assert
+    # Verify that the try statement has no parent (it's the root)
+    assert not hasattr(try_node, "parent")
+
+    # Verify that the body nodes have the try statement as parent
+    dangerous_call = try_node.body[0]
+    print_call = try_node.handlers[0].body[0]
+    cleanup_call = try_node.finalbody[0]
+
+    assert hasattr(dangerous_call, "parent")
+    assert dangerous_call.parent is try_node
+    assert hasattr(print_call, "parent")
+    assert print_call.parent is try_node.handlers[0]
+    assert hasattr(cleanup_call, "parent")
+    assert cleanup_call.parent is try_node

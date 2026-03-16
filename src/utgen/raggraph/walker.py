@@ -30,8 +30,7 @@ def iter_python_files(path: str, skip_init: bool = True) -> Generator[str, None,
 def build_graph_from_directory(
     code_path: str, 
     skip_init: bool = True, 
-    save_graph: bool = False, 
-    save_path: str = ""
+    save_graph_path: str = ""
 ) -> nx.DiGraph:
     """
     Analyzes a directory and builds a directed graph representing the code structure.
@@ -44,10 +43,7 @@ def build_graph_from_directory(
     Args:
         code_path (str): The root path of the source code to analyze.
         skip_init (bool): Whether to ignore package initialization files. Defaults to True.
-        save_graph (bool): If True, exports the resulting graph to a GraphML file. 
-            Defaults to False.
-        save_path (str): The file path where the GraphML will be saved if save_graph 
-            is True.
+        save_graph_path (str): The file path where the GraphML will be saved if not empty.
 
     Returns:
         nx.DiGraph: A NetworkX directed graph containing the code's structural 
@@ -70,8 +66,8 @@ def build_graph_from_directory(
         builder.attach_parents(tree)
         builder.visit(tree)
 
-    if save_graph and save_path:
+    if save_graph_path:
         # To open with Gephi or other graph visualization tools
-        nx.write_graphml(graph, save_path)
+        nx.write_graphml(graph, save_graph_path)
 
     return graph

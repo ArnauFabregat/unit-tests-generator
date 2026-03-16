@@ -6,7 +6,6 @@ AI agents return structured data matching the expected JSON schema. It
 performs multi-level validation: JSON syntax, pydantic schema, python syntax for code snippets,
 dangerous functions detection and pytest compatibility checks.
 
-- Validar codi python amb try ast.parse(x) except Exception as e: fail("Codi no vàlid: " + str(e))
 - Validar funcions perilloses: prohibits = ['os.remove', 'shutil.rmtree', 'subprocess.run', 'os.system']
 - Validar compatibilitat amb pytest: if not v.strip().startswith("def test_")
 """
@@ -90,7 +89,7 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
                 errors.append(f"Test '{test_id}' syntax error: {e.msg} at line {e.lineno}")
     # TODO additional checks: pytest compatibility, dangerous functions, etc.
 
-    # 3. Return
+    # 4. Return
     if errors:
         logger.warning("Guardrail `validate_tests_schema` triggered: invalid test entries.")
         feedback: str = "Guardrail `validate_tests_schema` validation failed:\n- " + "\n- ".join(errors)

@@ -1,10 +1,23 @@
-# type: ignore
-
 import ast
 import textwrap
+from typing import Any
+import networkx as nx
 
 
-def get_node_context(g, node_id):
+def get_node_context(g: nx.DiGraph, node_id: str) -> str:
+    """
+    Generates a comprehensive text context for a specific node in the code graph.
+
+    This includes the node's source code, its relationships (incoming/outgoing 
+    edges), and detailed information about its immediate neighbors.
+
+    Args:
+        g (nx.DiGraph): The NetworkX directed graph containing the code structure.
+        node_id (str): The unique identifier of the node (file::type::name).
+
+    Returns:
+        str: A formatted string block ready to be used as LLM context.
+    """
     context: str = ""
 
     # 1. Node Attributes
@@ -15,8 +28,8 @@ def get_node_context(g, node_id):
     src = node_data.get("source") or ""
     context += "source:\n" + src + "\n\n"
 
-    # 2. Outgoing edges
-    out_edges = []
+    # 2. Outgoing edges (what this node calls or depends on)
+    out_edges: list[str] = []
     for _, dst, data in g.out_edges(node_id, data=True):
         if g.nodes[dst].get("type") == "nested_function":
             continue
@@ -27,8 +40,8 @@ def get_node_context(g, node_id):
         context += "### OUTGOING EDGES ###\n"
         context += "\n".join(out_edges) + "\n\n"
 
-    # 3. Incoming edges
-    in_edges = []
+    # 3. Incoming edges (what calls or uses this node)
+    in_edges: list[str] = []
     for src_id, _, data in g.in_edges(node_id, data=True):
         if g.nodes[src_id].get("type") == "nested_function":
             continue
@@ -39,8 +52,8 @@ def get_node_context(g, node_id):
         context += "### INCOMING EDGES ###\n"
         context += "\n".join(in_edges) + "\n\n"
 
-    # 4. Neighbor context
-    neighbor_ids = set()
+    # 4. Neighbor context (providing deeper details on related nodes)
+    neighbor_ids: set[str] = set()
 
     # nodes referenced by outgoing edges
     for _, dst in g.out_edges(node_id):
@@ -52,7 +65,7 @@ def get_node_context(g, node_id):
         if g.nodes[src_id].get("type") not in ["file", "nested_function"]:
             neighbor_ids.add(src_id)
 
-    neighbor_blocks = []
+    neighbor_blocks: list[str] = []
     for nid in neighbor_ids:
         nd = g.nodes[nid]
         blk = "--- Neighbor Node ---\n"
@@ -67,20 +80,25 @@ def get_node_context(g, node_id):
 
     return context
 
-# ------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------
 
+def get_source_segment(file_path: str, node: ast.AST) -> str:
+    """
+    Extracts the raw source code segment for a specific AST node from a file.
 
-def get_source_segment(file_path, node):
-    """Return source code for an AST node by reading the file text and slicing."""
+    Args:
+        file_path (str): Path to the .py file.
+        node (ast.AST): The AST node to extract.
+
+    Returns:
+        str: The extracted source code string, or an empty string if failed.
+    """
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             src = f.read()
     except OSError:
         return ""
 
-    # Preferred: use ast.get_source_segment if available and positions are present
+    # Preferred: use built-in ast tool if available
     try:
         seg = ast.get_source_segment(src, node)
         if seg is not None:
@@ -88,68 +106,86 @@ def get_source_segment(file_path, node):
     except Exception:
         pass
 
-    # Fallback: use lineno/end_lineno (available in modern Python)
+    # Fallback: manual line slicing
     if hasattr(node, "lineno") and hasattr(node, "end_lineno"):
         lines = src.splitlines()
-        # Note: AST line numbers are 1-based
+        # AST line numbers are 1-based
         snippet = "\n".join(lines[node.lineno - 1: node.end_lineno])
-        # Optional: dedent so nested defs look nice
         return textwrap.dedent(snippet)
 
     return ""
 
 
-def canonical_id(*parts):
+def canonical_id(*parts: str) -> str:
+    """
+    Creates a standardized string identifier for graph nodes.
+
+    Args:
+        *parts (str): String components like filename, type, and name.
+
+    Returns:
+        str: A joined string using '::' as a separator.
+    """
     return "::".join(parts)
 
 
-def normalize_signature(node):
-    """Return a Python-like signature including annotations and return type."""
+def normalize_signature(node: ast.AST) -> str:
+    """
+    Reconstructs a valid Python function signature from an AST node.
+
+    This includes arguments, type hints, and return annotations.
+
+    Args:
+        node (ast.AST): The AST function definition node.
+
+    Returns:
+        str: A string representing the 'def function_name(...):' signature.
+    """
     if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         return ""
 
-    def unparse(x):
+    def unparse(x: Any) -> str:
         try:
             return ast.unparse(x)
         except Exception:
             return ""
 
-    parts = []
+    parts: list[str] = []
 
-    # Pos-only args (Python 3.8+)
-    for a in getattr(node.args, "posonlyargs", []):
+    # Positional-only args
+    pos_only = getattr(node.args, "posonlyargs", [])
+    for a in pos_only:
         s = a.arg
         if a.annotation:
             s += f": {unparse(a.annotation)}"
         parts.append(s)
-    if getattr(node.args, "posonlyargs", []):
+    if pos_only:
         parts.append("/")
 
-    # Regular args
+    # Standard args
     for a in node.args.args:
         s = a.arg
         if a.annotation:
             s += f": {unparse(a.annotation)}"
         parts.append(s)
 
-    # Vararg
+    # *args
     if node.args.vararg:
         s = "*" + node.args.vararg.arg
         if node.args.vararg.annotation:
             s += f": {unparse(node.args.vararg.annotation)}"
         parts.append(s)
     elif node.args.kwonlyargs:
-        # bare * to mark start of kw-only if no vararg
         parts.append("*")
 
-    # kw-only args
+    # Keyword-only args
     for a in node.args.kwonlyargs:
         s = a.arg
         if a.annotation:
             s += f": {unparse(a.annotation)}"
         parts.append(s)
 
-    # kwargs
+    # **kwargs
     if node.args.kwarg:
         s = "**" + node.args.kwarg.arg
         if node.args.kwarg.annotation:
@@ -160,4 +196,5 @@ def normalize_signature(node):
     if node.returns:
         ret = f" -> {unparse(node.returns)}"
 
-    return f"def {node.name}({', '.join(parts)}){ret}"
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    return f"{prefix} {node.name}({', '.join(parts)}){ret}"

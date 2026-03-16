@@ -5,9 +5,6 @@ This module provides validation functions (guardrails) designed to verify that
 AI agents return structured data matching the expected JSON schema. It
 performs multi-level validation: JSON syntax, pydantic schema, python syntax for code snippets,
 dangerous functions detection and pytest compatibility checks.
-
-- Validar funcions perilloses: prohibits = ['os.remove', 'shutil.rmtree', 'subprocess.run', 'os.system']
-- Validar compatibilitat amb pytest: if not v.strip().startswith("def test_")
 """
 
 import ast
@@ -76,6 +73,7 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
         # Assuming the 'content' dict has a key like 'code' or 'content' containing the Python string
         python_imports = content.get("imports", "") 
         if python_imports:
+            python_imports = "\n".join(python_imports)
             try:
                 ast.parse(python_imports)
             except SyntaxError as e:
@@ -88,6 +86,8 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
             except SyntaxError as e:
                 errors.append(f"Test '{test_id}' syntax error: {e.msg} at line {e.lineno}")
     # TODO additional checks: pytest compatibility, dangerous functions, etc.
+    # - Validar funcions perilloses: prohibits = ['os.remove', 'shutil.rmtree', 'subprocess.run', 'os.system']
+    # - Validar compatibilitat amb pytest: if not v.strip().startswith("def test_")
 
     # 4. Return
     if errors:

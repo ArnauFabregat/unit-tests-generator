@@ -2,7 +2,7 @@
 generate_unit_tests_task:
   description: >
     Generate a pytest suite for the function described in the context below.
-    
+
     CRITICAL INSTRUCTIONS:
     1. **Target Code**: Focus on the source code under `### NODE INFO ###`.
     2. **Mocking**: Use `### OUTGOING EDGES ###` to identify dependencies. 
@@ -17,14 +17,37 @@ generate_unit_tests_task:
        conditions and potential crash points.
     5. **Naming**: Use the `file::type::name` to determine the correct 
        import paths for the test file.
+    6. **Avoid Over-Mocking**: 
+       - DO NOT mock built-in functions like `open`, `os.path`, or `ast` unless strictly necessary for a crash test.
+       - Use `pytest`'s `tmp_path` fixture to create real temporary files and directories instead of mocking the filesystem.
+    7. **Prefer Real Logic**: 
+       - Always attempt to instantiate the real class using the actual code from `utgen`. 
+       - Only mock external libraries (like `networkx`) or other nodes in the graph if they involve
+         network calls or are extremely slow.
+    8. **Filesystem Simulation**: 
+       - If the code under test reads or writes files, the test code MUST use `tmp_path` to set up
+         a real directory structure that matches the `code_path` and `file_path` logic.
 
     CONTEXT FROM GRAPH:
     {graph_context}
   expected_output: >
     A structured JSON object mapped to the LLMTestOutput schema: {'tests': {'ID': TestCase}}
     It must contain 'tests' where each item includes:
-    - 'name': A descriptive string for the test function (e.g., 'test_api_connection_timeout').
-    - 'imports': All necessary import statements specifically required for this test case 
-       (e.g., 'import pytest, from unittest.mock import Mock').
-    - 'code': The complete source code of the test function.
-    The output must be valid Python-parseable code without any conversational filler.
+    - 'imports' (list[str]): All necessary import statements specifically required for this test case 
+       (e.g., ['import pytest', 'from unittest.mock import Mock']).
+    - 'code' (str): The full Python source code for the test function.
+    The values must be valid Python-parseable code without any conversational filler.
+    Output example:
+    {
+    "tests": {
+      "test_attach_parents_with_simple_ast": {
+         "imports": [
+            "import pytest",
+            "from unittest.mock import Mock",
+            "import ast",
+            "from utgen.raggraph.parser import CodeGraphBuilder2"
+         ],
+         "code": "def test_attach_parents_with_simple_ast():\n    \"\"\"\n    Test attach_parents with a simple AST containing a FunctionDef.\n    \"\"\"\n    # Arrange\n    fn_node = ast.FunctionDef(\n        name='my_function',\n        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),\n        body=[],\n        decorator_list=[],\n        returns=None,\n        type_comment=None\n    )\n    \n    # Act\n    CodeGraphBuilder2.attach_parents(fn_node)\n    \n    # Assert\n    # Verify that the FunctionDef node has no parent (it's the root)\n    assert not hasattr(fn_node, 'parent')\n    \n    # Verify that child nodes have the parent attribute set\n    # In this case, FunctionDef has no child nodes, so nothing to check\n    assert True"
+      },
+    },
+    }

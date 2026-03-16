@@ -1,5 +1,6 @@
 import subprocess
 import os
+from utgen.logger import logger
 
 
 def validate_individual_test(import_code: str, test_code: str) -> bool:
@@ -47,7 +48,7 @@ def save_and_clean_tests(
         destination (str): The file path where the cleaned tests will be saved.
     """
     if not valid_tests:
-        print("No valid tests available to save.")
+        logger.debug("No valid tests available to save.")
         return
 
     # Ensure the directory exists
@@ -69,7 +70,7 @@ def save_and_clean_tests(
         f.write(final_content)
 
     # 3. Use Ruff to organize and clean the generated file
-    print(f"Cleaning {destination} with Ruff...")
+    logger.debug(f"Cleaning {destination} with Ruff...")
     
     # Sort imports and remove duplicates (isort behavior)
     subprocess.run(["ruff", "check", "--select", "I", "--fix", destination], capture_output=True)
@@ -79,5 +80,5 @@ def save_and_clean_tests(
     
     # Format code (Black-style formatting)
     subprocess.run(["ruff", "format", destination], capture_output=True)
-    
-    print(f"✅ Process finished. File saved at: {destination}")
+
+    logger.debug(f"Process finished. File saved at: {destination}")

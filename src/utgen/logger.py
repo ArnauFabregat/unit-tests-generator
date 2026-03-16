@@ -80,19 +80,6 @@ def setup_logger(debug: bool | None = None) -> None:
         level="WARNING",
     )
 
-    # 3. File: Persistent storage (Matches base_level)
-    # Configured with rotation (size-based) and retention (time-based)
-    logger.add(
-        "../data/logs/app.log",
-        format=LOG_FORMAT,
-        level=base_level,
-        rotation="10 MB",
-        retention="10 days",
-        compression="zip",
-        enqueue=True,  # Thread-safe logging
-    )
-
-
 # --- INITIALIZATION ---
 # Run once when module is imported to apply settings globally
 disable_dependency_loggers(DEPENDENCIES_WITH_LOGGING)

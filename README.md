@@ -15,18 +15,32 @@ The system operates through a multi-stage pipeline:
 5. **Persistence**: Only tests that pass execution and meet coverage criteria are committed to your `/tests` directory.
 
 ## Table of Contents
-
-1. [Graph structure](#graph-structure)
-2. [Use cases](#use-cases)
-3. [Code Quality & Documentation](#code-quality--documentation)
+1. [Usage](#usage)
+2. [Examples](#examples)
+3. [Graph structure](#graph-structure)
+4. [Code Quality & Documentation](#code-quality--documentation)
     - [Pre-commit Hooks](#pre-commit-hooks)
     - [Unit Testing](#unit-testing)
     - [Peer Review](#peer-review)
-4. [Virtual Environment](#virtual-environment)
+5. [Virtual Environment](#virtual-environment)
     - [Create a new virtualenv with the project's dependencies](#create-a-new-virtualenv-with-the-projects-dependencies)
     - [Checking if the project's virtual environment is active](#checking-if-the-projects-virtual-environment-is-active)
     - [Updating the project's dependencies](#updating-the-projects-dependencies)
-5. [TODO](#todo)
+6. [TODO](#todo)
+
+## Usage
+TBD
+
+## Examples
+Upload `repo.graphml` to https://lite.gephi.org/.
+
+- This repository:
+    - Code coverage:
+- Example for repository https://github.com/ArnauFabregat/probability_estimation
+![Diagram](docs/probability-estimation-repo-graph.png)
+    - Code coverage:
+- Example for repository
+    - Code coverage
 
 ## Graph structure
 To extract relevant context, the graph needs:
@@ -60,12 +74,6 @@ Fields:
 
 ### 🧠 Prompt template
 TBD
-
-## Use cases
-Upload `repo.graphml` to https://lite.gephi.org/.
-
-- Example for repository https://github.com/ArnauFabregat/probability_estimation
-![Diagram](docs/probability-estimation-repo-graph.png)
 
 ## Code Quality & Documentation
 ### Pre-commit Hooks
@@ -165,7 +173,6 @@ Open a terminal in VSCode and execute the following command:
 ## TODO
 - Run pre-commit
 - Study the possibility to run the tests in docker isolated environment for safety
-- Add a final process that re arrange the tests directory in one test.py per src file using the graph info
 - Run pytest cov as last step
 - Add the remaining guardrails
 - Replace crewai by langgraph

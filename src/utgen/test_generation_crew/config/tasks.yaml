@@ -21,18 +21,13 @@ generate_unit_tests_task:
        - DO NOT mock built-in functions like `open`, `os.path`, or `ast` unless strictly necessary for a crash test.
        - Use `pytest`'s `tmp_path` fixture to create real temporary files and directories instead of mocking the filesystem.
     7. **Prefer Real Logic**: 
-       - Always attempt to instantiate the real class using the actual code from `utgen`. 
-       - Only mock external libraries (like `networkx`) or other nodes in the graph if they involve
-         network calls or are extremely slow.
-    8. **Filesystem Simulation**: 
-       - If the code under test reads or writes files, the test code MUST use `tmp_path` to set up
-         a real directory structure that matches the `code_path` and `file_path` logic.
+       - Always attempt to instantiate the real class using the actual code from `utgen`.
 
     CONTEXT FROM GRAPH:
     {graph_context}
   expected_output: >
     A structured JSON object mapped to the LLMTestOutput schema: {'tests': {'ID': TestCase}}
-    It must contain 'tests' where each item includes:
+    It must contain 'tests' key where each TestCase item includes:
     - 'imports' (list[str]): All necessary import statements specifically required for this test case 
        (e.g., ['import pytest', 'from unittest.mock import Mock']).
     - 'code' (str): The full Python source code for the test function.

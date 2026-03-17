@@ -1,4 +1,8 @@
 # 🛡️ Unit-Tests-Generator
+[![PyPI version](https://img.shields.io/pypi/v/unit-tests-generator.svg)](https://pypi.org/project/unit-tests-generator/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/unit-tests-generator.svg)](https://pypi.org/project/unit-tests-generator/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 *Autonomous, RAG-Driven Test Engineering for Python.*
 
 **Unit-Tests-Generator** is an intelligent agentic tool that automates the entire `pytest` lifecycle. Unlike static template generators, it leverages an in-memory knowledge graph of your codebase and RAG to produce context-aware, executable, and validated test suites.

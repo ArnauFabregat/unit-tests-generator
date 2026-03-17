@@ -42,6 +42,10 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.package-data]
+# This ensures all yaml files in that specific subdirectory are included
+"utgen.test_generation_crew.config" = ["*.yaml"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["utgen*"]

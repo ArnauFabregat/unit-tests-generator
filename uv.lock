@@ -2764,6 +2764,7 @@ dependencies = [
     { name = "networkx" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -2782,6 +2783,7 @@ requires-dist = [
     { name = "networkx", specifier = ">=3.6.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "typer", specifier = ">=0.23.1" },
 ]
 
 [package.metadata.requires-dev]

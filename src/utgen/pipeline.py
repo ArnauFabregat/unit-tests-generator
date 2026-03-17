@@ -9,7 +9,7 @@ from utgen.test_generation_crew.crew import TestGenerationCrew
 from utgen.validation import save_and_clean_tests, validate_individual_test
 
 
-def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> None:
+def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str = "") -> None:
     """
     Main function to orchestrate the test generation process.
     Args:

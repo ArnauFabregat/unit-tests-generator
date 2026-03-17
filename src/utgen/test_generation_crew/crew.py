@@ -94,4 +94,5 @@ class TestGenerationCrew:
             agents=self.agents,
             tasks=self.tasks,
             verbose=self._verbose,
+            share_crew=self._verbose,
         )

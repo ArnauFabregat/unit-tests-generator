@@ -14,6 +14,25 @@ The system operates through a multi-stage pipeline:
 
 5. **Persistence**: Only tests that pass execution and meet coverage criteria are committed to your `/tests` directory.
 
+## Quick Start
+```bash
+# Install the package
+pip install unit-tests-generator
+
+# Generate tests using source and output paths
+utgen -s ./src -t ./tests
+```
+
+### Setting up your LLM
+Required environment variables:
+```bash
+# .env file
+LLM_OPENROUTER_MODEL = ""
+LLM_OPENROUTER_API_KEY = ""
+```
+- Powered by CrewAI and OpenRouter: https://docs.crewai.com/en/concepts/llms#open-router.
+- OpenRouter models: https://openrouter.ai/models.
+
 ## Table of Contents
 1. [Usage](#usage)
 2. [Examples](#examples)
@@ -30,17 +49,26 @@ The system operates through a multi-stage pipeline:
 7. [TODO](#todo)
 
 ## Usage
-TBD
+`utgen` is designed to be simple and terminal-first. Once installed, you can generate tests by pointing the tool to your source code and specifying an output directory.
 
-### Setting up your LLM
-Required environment variables:
+### CLI Arguments
+| Flag | Shortcut | Description | Required | Default |
+| :--- | :--- | :--- | :--- | :--- |
+| `--src_path` | `-s` | Path to the directory containing your source code. | **Yes** | — |
+| `--test_path` | `-t` | Path to the directory where generated tests will be saved. | **Yes** | — |
+| `--graph_path` | `-g` | Path to the RAG-Graph data (enables advanced context). | No | `None` |
+| `--help` | — | Show the help message and exit. | No | — |
+
+### Basic Command
+Run a standard generation without a RAG-Graph:
 ```bash
-# .env file
-LLM_OPENROUTER_MODEL = ""
-LLM_OPENROUTER_API_KEY = ""
+utgen -s src/ -t tests/
 ```
-- Powered by CrewAI and OpenRouter: https://docs.crewai.com/en/concepts/llms#open-router.
-- OpenRouter models: https://openrouter.ai/models.
+### Full Command
+Enable RAG-Graph context for more accurate, context-aware test generation:
+```bash
+utgen --src_path src/ --test_path tests/ --graph_path data/
+```
 
 ## Examples
 Upload `repo.graphml` to https://lite.gephi.org/.
@@ -185,8 +213,9 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
+- rename repo to "unit-tests-generator"
 - Study the possibility to run the tests in docker isolated environment for safety
 - Run pytest cov as last step
-- Add the remaining guardrails
+- Add the remaining guardrails: not allow to write files from test_*.py
 - Replace crewai by langgraph
 - Publish to PyPI

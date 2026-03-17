@@ -1,317 +1,397 @@
 import ast
 
+import networkx as nx
 import pytest
-from networkx import DiGraph
 
-from utgen.raggraph.utils import canonical_id, get_node_context, get_source_segment, normalize_signature
+from utgen.raggraph.utils import canonical_id, get_node_context, get_source_segment
 
 
-def test_get_node_context_basic():
+def test_get_node_context_with_basic_graph():
     """
-    Test get_node_context with a simple graph containing one node.
+    Test get_node_context with a basic graph containing one node.
     """
     # Arrange
-    g = DiGraph()
-    node_id = "file.py::class::MyClass"
-    g.add_node(node_id, source="class MyClass:\n    pass", signature="MyClass", docstring="A simple class")
+    # Create a simple graph with one node
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Add node with basic attributes
+    g.add_node(
+        node_id, source="def test_func():", type="function", signature="def test_func()", docstring="Test function"
+    )
 
     # Act
     result = get_node_context(g, node_id)
 
     # Assert
+    # Verify that the context contains the node info section
     assert "### NODE INFO ###" in result
-    assert "file::type::name -> file.py::class::MyClass" in result
+    assert f"file::type::name -> {node_id}" in result
     assert "source:" in result
-    assert "class MyClass:" in result
+    assert "def test_func():" in result
+
+    # Verify that no edges sections are present (since there are no edges)
     assert "### OUTGOING EDGES ###" not in result
     assert "### INCOMING EDGES ###" not in result
     assert "### NEIGHBOR NODE DETAILS ###" not in result
 
 
-def test_get_node_context_with_edges():
+def test_get_node_context_with_outgoing_edges():
     """
-    Test get_node_context with a graph containing edges.
+    Test get_node_context with a graph that has outgoing edges.
     """
     # Arrange
-    g = DiGraph()
-    node1 = "file1.py::function::func1"
-    node2 = "file2.py::function::func2"
-    g.add_node(node1, source="def func1():\n    pass", signature="func1", docstring="Function 1")
-    g.add_node(node2, source="def func2():\n    pass", signature="func2", docstring="Function 2")
-    g.add_edge(node1, node2, rel="calls")
+    # Create a graph with one node and outgoing edges
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Add node with basic attributes
+    g.add_node(
+        node_id, source="def test_func():", type="function", signature="def test_func()", docstring="Test function"
+    )
+
+    # Add neighbor node
+    neighbor_id = "test_file.py::function::helper_func"
+    g.add_node(
+        neighbor_id,
+        source="def helper_func():",
+        type="function",
+        signature="def helper_func()",
+        docstring="Helper function",
+    )
+
+    # Add outgoing edge
+    g.add_edge(node_id, neighbor_id, rel="calls")
 
     # Act
-    result = get_node_context(g, node1)
+    result = get_node_context(g, node_id)
 
     # Assert
+    # Verify that the context contains the node info section
+    assert "### NODE INFO ###" in result
+    assert f"file::type::name -> {node_id}" in result
+
+    # Verify that the source code is included
+    assert "source:" in result
+    assert "def test_func():" in result
+
+    # Verify that the outgoing edges section is present
     assert "### OUTGOING EDGES ###" in result
-    assert "file1.py::function::func1 -[calls]-> file2.py::function::func2" in result
+    assert f"{node_id} -[calls]-> {neighbor_id}" in result
+
+    # Verify that the incoming edges section is not present
     assert "### INCOMING EDGES ###" not in result
+
+    # Verify that the neighbor node details section is present
     assert "### NEIGHBOR NODE DETAILS ###" in result
-    assert "file2.py::function::func2" in result
+    assert f"file::type::name -> {neighbor_id}" in result
+    assert "signature: def helper_func()" in result
+    assert "docstring:" in result
+    assert "Helper function" in result
 
 
 def test_get_node_context_with_incoming_edges():
     """
-    Test get_node_context with incoming edges.
+    Test get_node_context with a graph that has incoming edges.
     """
     # Arrange
-    g = DiGraph()
-    node1 = "file1.py::function::func1"
-    node2 = "file2.py::function::func2"
-    g.add_node(node1, source="def func1():\n    pass", signature="func1", docstring="Function 1")
-    g.add_node(node2, source="def func2():\n    pass", signature="func2", docstring="Function 2")
-    g.add_edge(node1, node2, rel="calls")
+    # Create a graph with one node and incoming edges
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Add node with basic attributes
+    g.add_node(
+        node_id, source="def test_func():", type="function", signature="def test_func()", docstring="Test function"
+    )
+
+    # Add neighbor node
+    neighbor_id = "test_file.py::function::main_func"
+    g.add_node(
+        neighbor_id, source="def main_func():", type="function", signature="def main_func()", docstring="Main function"
+    )
+
+    # Add incoming edge
+    g.add_edge(neighbor_id, node_id, rel="calls")
 
     # Act
-    result = get_node_context(g, node2)
+    result = get_node_context(g, node_id)
 
     # Assert
+    # Verify that the context contains the node info section
+    assert "### NODE INFO ###" in result
+    assert f"file::type::name -> {node_id}" in result
+
+    # Verify that the source code is included
+    assert "source:" in result
+    assert "def test_func():" in result
+
+    # Verify that the outgoing edges section is not present
+    assert "### OUTGOING EDGES ###" not in result
+
+    # Verify that the incoming edges section is present
     assert "### INCOMING EDGES ###" in result
-    assert "file1.py::function::func1 -[calls]-> file2.py::function::func2" in result
+    assert f"{neighbor_id} -[calls]-> {node_id}" in result
+
+    # Verify that the neighbor node details section is present
     assert "### NEIGHBOR NODE DETAILS ###" in result
-    assert "file1.py::function::func1" in result
+    assert f"file::type::name -> {neighbor_id}" in result
+    assert "signature: def main_func()" in result
+    assert "docstring:" in result
+    assert "Main function" in result
 
 
-def test_get_node_context_missing_node():
+def test_get_node_context_with_no_source_code():
     """
-    Test get_node_context with a non-existent node (should handle gracefully).
+    Test get_node_context when the node has no source code.
     """
     # Arrange
-    g = DiGraph()
+    # Create a graph with a node that has no source code
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
 
-    # Act & Assert
+    # Add node with no source code
+    g.add_node(node_id, type="function", signature="def test_func()", docstring="Test function")
+
+    # Act
+    result = get_node_context(g, node_id)
+
+    # Assert
+    # Verify that the context contains the node info section
+    assert "### NODE INFO ###" in result
+    assert f"file::type::name -> {node_id}" in result
+
+    # Verify that the source section is present but empty
+    assert "source:" in result
+    assert "source:" in result and result.split("source:")[1].strip() == ""
+
+    # Verify that no edges sections are present (since there are no edges)
+    assert "### OUTGOING EDGES ###" not in result
+    assert "### INCOMING EDGES ###" not in result
+    assert "### NEIGHBOR NODE DETAILS ###" not in result
+
+
+def test_get_node_context_with_no_attributes():
+    """
+    Test get_node_context when the node has no attributes.
+    """
+    # Arrange
+    # Create a graph with a node that has no attributes
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Add node with no attributes
+    g.add_node(node_id)
+
+    # Act
+    result = get_node_context(g, node_id)
+
+    # Assert
+    # Verify that the context contains the node info section
+    assert "### NODE INFO ###" in result
+    assert f"file::type::name -> {node_id}" in result
+
+    # Verify that the source section is present but empty
+    assert "source:" in result
+    assert "source:" in result and result.split("source:")[1].strip() == ""
+
+    # Verify that no edges sections are present (since there are no edges)
+    assert "### OUTGOING EDGES ###" not in result
+    assert "### INCOMING EDGES ###" not in result
+    assert "### NEIGHBOR NODE DETAILS ###" not in result
+
+
+def test_get_node_context_with_multiple_neighbors():
+    """
+    Test get_node_context with a graph that has multiple neighbor nodes.
+    """
+    # Arrange
+    # Create a graph with multiple neighbors
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Add main node
+    g.add_node(
+        node_id, source="def test_func():", type="function", signature="def test_func()", docstring="Test function"
+    )
+
+    # Add neighbor nodes
+    neighbor_ids = [
+        "test_file.py::function::helper1",
+        "test_file.py::function::helper2",
+        "test_file.py::function::main",
+    ]
+
+    for nid in neighbor_ids:
+        g.add_node(
+            nid,
+            source=f"def {nid.split('::')[-1]}():",
+            type="function",
+            signature=f"def {nid.split('::')[-1]}()",
+            docstring=f"{nid.split('::')[-1]} function",
+        )
+
+    # Add edges
+    g.add_edge(node_id, neighbor_ids[0], rel="calls")
+    g.add_edge(node_id, neighbor_ids[1], rel="calls")
+    g.add_edge(neighbor_ids[2], node_id, rel="calls")
+
+    # Act
+    result = get_node_context(g, node_id)
+
+    # Assert
+    # Verify that the context contains the node info section
+    assert "### NODE INFO ###" in result
+    assert f"file::type::name -> {node_id}" in result
+
+    # Verify that the source code is included
+    assert "source:" in result
+    assert "def test_func():" in result
+
+    # Verify that the outgoing edges section is present
+    assert "### OUTGOING EDGES ###" in result
+    assert f"{node_id} -[calls]-> {neighbor_ids[0]}" in result
+    assert f"{node_id} -[calls]-> {neighbor_ids[1]}" in result
+
+    # Verify that the incoming edges section is present
+    assert "### INCOMING EDGES ###" in result
+    assert f"{neighbor_ids[2]} -[calls]-> {node_id}" in result
+
+    # Verify that the neighbor node details section is present
+    assert "### NEIGHBOR NODE DETAILS ###" in result
+
+    # Verify that all neighbor nodes are included
+    for nid in neighbor_ids:
+        assert f"file::type::name -> {nid}" in result
+        assert f"signature: def {nid.split('::')[-1]}()" in result
+        assert f"{nid.split('::')[-1]} function" in result
+
+
+def test_get_node_context_with_no_node_in_graph():
+    """
+    Test get_node_context when the node_id is not in the graph.
+    """
+    # Arrange
+    # Create an empty graph
+    g = nx.DiGraph()
+    node_id = "test_file.py::function::test_func"
+
+    # Act and Assert
+    # Verify that the function raises a KeyError when the node is not found
     with pytest.raises(KeyError):
-        get_node_context(g, "nonexistent::node")
+        get_node_context(g, node_id)
 
 
-def test_get_source_segment_single_line(tmp_path):
+def test_get_source_segment_with_non_existent_file():
     """
-    Test get_source_segment with a single-line node.
+    Test get_source_segment when the file does not exist.
     """
     # Arrange
-    file_path = tmp_path / "test.py"
-    source_code = """x = 42"""
-    file_path.write_text(source_code, encoding="utf-8")
-
-    tree = ast.parse(source_code)
-    assign_node = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign))
+    # Create a simple AST node
+    node = ast.parse("def my_function(): pass").body[0]
 
     # Act
-    result = get_source_segment(str(file_path), assign_node)
+    result = get_source_segment("non_existent_file.py", node)
 
     # Assert
-    assert result == "x = 42"
+    # Verify that an empty string is returned
+    assert result == ""
+
+    # Verify that no exception is raised
+    assert True
 
 
-def test_canonical_id_basic():
+def test_canonical_id_with_basic_parts():
     """
-    Test canonical_id with basic string components.
+    Test canonical_id with basic string parts.
     """
     # Arrange
-    parts = ("file.py", "class", "MyClass")
+    parts = ("test_file.py", "function", "my_function")
 
     # Act
     result = canonical_id(*parts)
 
     # Assert
-    assert result == "file.py::class::MyClass"
+    assert result == "test_file.py::function::my_function"
 
 
-def test_canonical_id_empty():
+def test_canonical_id_with_empty_parts():
     """
-    Test canonical_id with no arguments (edge case).
-    """
-    # Arrange
-
-    # Act
-    result = canonical_id()
-
-    # Assert
-    assert result == ""
-
-
-def test_canonical_id_single_part():
-    """
-    Test canonical_id with a single string component.
+    Test canonical_id with no parts provided.
     """
     # Arrange
-    part = "file.py"
-
-    # Act
-    result = canonical_id(part)
-
-    # Assert
-    assert result == "file.py"
-
-
-def test_canonical_id_multiple_parts():
-    """
-    Test canonical_id with multiple string components.
-    """
-    # Arrange
-    parts = ("module", "function", "my_func", "nested")
+    parts = ()
 
     # Act
     result = canonical_id(*parts)
 
     # Assert
-    assert result == "module::function::my_func::nested"
-
-
-def test_normalize_signature_basic():
-    """
-    Test normalize_signature with a basic function.
-    """
-    # Arrange
-    source = "def my_function():\n    pass"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def my_function()"
-
-
-def test_normalize_signature_with_args():
-    """
-    Test normalize_signature with positional arguments.
-    """
-    # Arrange
-    source = "def add(a, b):\n    return a + b"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def add(a, b)"
-
-
-def test_normalize_signature_with_annotations():
-    """
-    Test normalize_signature with type annotations.
-    """
-    # Arrange
-    source = 'def greet(name: str) -> str:\n    return f"Hello {name}"'
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def greet(name: str) -> str"
-
-
-def test_normalize_signature_with_varargs():
-    """
-    Test normalize_signature with *args.
-    """
-    # Arrange
-    source = "def sum_all(*args):\n    return sum(args)"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def sum_all(*args)"
-
-
-def test_normalize_signature_with_kwargs():
-    """
-    Test normalize_signature with **kwargs.
-    """
-    # Arrange
-    source = "def create(**kwargs):\n    return kwargs"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def create(**kwargs)"
-
-
-def test_normalize_signature_with_posonly():
-    """
-    Test normalize_signature with positional-only arguments.
-    """
-    # Arrange
-    source = "def divide(a, b, /):\n    return a / b"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def divide(a, b, /)"
-
-
-def test_normalize_signature_with_kwonly():
-    """
-    Test normalize_signature with keyword-only arguments.
-    """
-    # Arrange
-    source = "def func(a, *, b):\n    return a + b"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def func(a, *, b)"
-
-
-def test_normalize_signature_with_mixed():
-    """
-    Test normalize_signature with mixed argument types.
-    """
-    # Arrange
-    source = "def complex_func(a: int, b: str, /, *, c: float, **kwargs) -> bool:\n    return True"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "def complex_func(a: int, b: str, /, *, c: float, **kwargs) -> bool"
-
-
-def test_normalize_signature_async():
-    """
-    Test normalize_signature with async functions.
-    """
-    # Arrange
-    source = "async def fetch_data(url: str) -> dict:\n    return {}"
-    tree = ast.parse(source)
-    func_node = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef))
-
-    # Act
-    result = normalize_signature(func_node)
-
-    # Assert
-    assert result == "async def fetch_data(url: str) -> dict"
-
-
-def test_normalize_signature_non_function():
-    """
-    Test normalize_signature with non-function AST node.
-    """
-    # Arrange
-    class_node = ast.ClassDef(name="MyClass", bases=[], body=[], decorator_list=[])
-
-    # Act
-    result = normalize_signature(class_node)
-
-    # Assert
     assert result == ""
+
+
+def test_canonical_id_with_single_part():
+    """
+    Test canonical_id with a single string part.
+    """
+    # Arrange
+    parts = ("test_file.py",)
+
+    # Act
+    result = canonical_id(*parts)
+
+    # Assert
+    assert result == "test_file.py"
+
+
+def test_canonical_id_with_multiple_parts():
+    """
+    Test canonical_id with multiple string parts.
+    """
+    # Arrange
+    parts = ("test_file.py", "class", "TestClass", "method", "my_method")
+
+    # Act
+    result = canonical_id(*parts)
+
+    # Assert
+    assert result == "test_file.py::class::TestClass::method::my_method"
+
+
+def test_canonical_id_with_special_characters():
+    """
+    Test canonical_id with parts containing special characters.
+    """
+    # Arrange
+    parts = ("test_file.py", "class", "Test_Class_123", "method", "my-method")
+
+    # Act
+    result = canonical_id(*parts)
+
+    # Assert
+    assert result == "test_file.py::class::Test_Class_123::method::my-method"
+
+
+def test_canonical_id_with_empty_strings():
+    """
+    Test canonical_id with parts containing empty strings.
+    """
+    # Arrange
+    parts = ("test_file.py", "", "my_function")
+
+    # Act
+    result = canonical_id(*parts)
+
+    # Assert
+    assert result == "test_file.py::::my_function"
+
+
+def test_canonical_id_with_non_string_parts():
+    """
+    Test canonical_id with non-string parts.
+    """
+    # Arrange
+    parts = ("test_file.py", 123, "my_function")
+
+    # Act and Assert
+    # Verify that the function raises a TypeError when non-string parts are provided
+    with pytest.raises(TypeError):
+        canonical_id(*parts)

@@ -65,6 +65,6 @@ def build_graph_from_directory(code_path: str, skip_init: bool = True, save_grap
 
     if save_graph_path:
         # To open with Gephi or other graph visualization tools
-        nx.write_graphml(graph, save_graph_path)
+        nx.write_graphml(graph, f"{save_graph_path}/repo_graph.graphml")
 
     return graph

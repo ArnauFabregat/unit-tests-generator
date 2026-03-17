@@ -52,16 +52,16 @@ def build_graph_from_directory(code_path: str, skip_init: bool = True, save_grap
     for file_path in iter_python_files(code_path, skip_init=skip_init):
         with open(file_path, encoding="utf-8", errors="replace") as f:
             tree = ast.parse(f.read())
-        builder = CodeGraphBuilder1(code_path, file_path, graph)
-        builder.visit(tree)
+        builder1 = CodeGraphBuilder1(code_path, file_path, graph)
+        builder1.visit(tree)
 
     # Pass 2: Contextualizing relationships and parent attachment
     for file_path in iter_python_files(code_path, skip_init=skip_init):
         with open(file_path, encoding="utf-8", errors="replace") as f:
             tree = ast.parse(f.read())
-        builder = CodeGraphBuilder2(code_path, file_path, graph)
-        builder.attach_parents(tree)
-        builder.visit(tree)
+        builder2 = CodeGraphBuilder2(code_path, file_path, graph)
+        builder2.attach_parents(tree)
+        builder2.visit(tree)
 
     if save_graph_path:
         # To open with Gephi or other graph visualization tools

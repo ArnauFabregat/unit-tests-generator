@@ -23,7 +23,7 @@ def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> N
 
     logger.info("Started test generation process...")
     # Define defaultdict of dicts
-    tests_results = defaultdict(dict)
+    tests_results: defaultdict[str, dict[str, dict]] = defaultdict(dict)
 
     # TODO: afegir guardrails que falten
     test_generator = TestGenerationCrew(guardrail_max_retries=5, verbose=False)

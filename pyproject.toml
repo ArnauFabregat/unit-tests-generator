@@ -1,6 +1,6 @@
 [project]
 name = "unit-tests-generator"
-version = "0.1.1"
+version = "0.1.2"
 description = "Open source project to build a unit tests generator in Python."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -41,6 +41,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.package-data]
+# This ensures all yaml files in that specific subdirectory are included
+"utgen.test_generation_crew.config" = ["*.yaml"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

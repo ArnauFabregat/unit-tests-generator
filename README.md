@@ -68,18 +68,16 @@ LLM_OPENROUTER_API_KEY = ""
 | :--- | :--- | :--- | :--- | :--- |
 | `--src_path` | `-s` | Path to the directory containing your source code. | **Yes** | — |
 | `--test_path` | `-t` | Path to the directory where generated tests will be saved. | **Yes** | — |
-| `--graph_path` | `-g` | Path to the RAG-Graph data (enables advanced context). | No | `None` |
+| `--graph_path` | `-g` | Path to export graph data. | No | `None` |
 | `--help` | — | Show the help message and exit. | No | — |
 
-### Basic Command
-Run a standard generation without a RAG-Graph:
+Run a standard generation without Graph export:
 ```bash
 utgen -s src/ -t tests/
 ```
-### Full Command
-Enable RAG-Graph context for more accurate, context-aware test generation:
+Export graph:
 ```bash
-utgen --src_path src/ --test_path tests/ --graph_path data/
+utgen -s src/ -t tests/ -g data/
 ```
 
 ## Examples

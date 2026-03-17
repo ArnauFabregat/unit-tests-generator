@@ -28,7 +28,7 @@ def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str =
     # TODO: afegir guardrails que falten
     test_generator = TestGenerationCrew(guardrail_max_retries=5, verbose=False)
 
-    for node_id, data in list(g.nodes(data=True))[20:30]:
+    for node_id, data in list(g.nodes(data=True)):
         if data["type"] in ["function", "method"]:
             logger.info(f"Generating tests for node: {node_id}")
             try:
@@ -81,4 +81,3 @@ def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str =
         logger.debug(f"Saving cleaned tests for `{save_path}`...")
         save_and_clean_tests(valid_tests=accepted_tests, destination=f"{tests_output_dir}/{save_path}")
     logger.info("All tests validated and saved successfully.")
-    # TODO: run pytest coverage

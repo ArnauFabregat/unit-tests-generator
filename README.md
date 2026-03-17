@@ -217,6 +217,8 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
+- Complete readme Examples section
 - Study the possibility to run the tests in docker isolated environment for safety
-- Add the remaining guardrails: not allow to write files from test_*.py
+- Add the remaining guardrails: not allow to write files from test_*.py, not allow to pop up plots or similar
+- Add max tests to task prompt
 - Replace crewai by langgraph

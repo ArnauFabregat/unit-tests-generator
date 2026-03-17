@@ -1,6 +1,7 @@
 import ast
 import textwrap
 from typing import Any
+
 import networkx as nx
 
 
@@ -8,7 +9,7 @@ def get_node_context(g: nx.DiGraph, node_id: str) -> str:
     """
     Generates a comprehensive text context for a specific node in the code graph.
 
-    This includes the node's source code, its relationships (incoming/outgoing 
+    This includes the node's source code, its relationships (incoming/outgoing
     edges), and detailed information about its immediate neighbors.
 
     Args:
@@ -93,7 +94,7 @@ def get_source_segment(file_path: str, node: ast.AST) -> str:
         str: The extracted source code string, or an empty string if failed.
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             src = f.read()
     except OSError:
         return ""
@@ -110,7 +111,7 @@ def get_source_segment(file_path: str, node: ast.AST) -> str:
     if hasattr(node, "lineno") and hasattr(node, "end_lineno"):
         lines = src.splitlines()
         # AST line numbers are 1-based
-        snippet = "\n".join(lines[node.lineno - 1: node.end_lineno])
+        snippet = "\n".join(lines[node.lineno - 1 : node.end_lineno])
         return textwrap.dedent(snippet)
 
     return ""

@@ -80,6 +80,7 @@ def setup_logger(debug: bool | None = None) -> None:
         level="WARNING",
     )
 
+
 # --- INITIALIZATION ---
 # Run once when module is imported to apply settings globally
 disable_dependency_loggers(DEPENDENCIES_WITH_LOGGING)

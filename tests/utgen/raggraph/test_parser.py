@@ -11,7 +11,6 @@ def test_visit_name_with_no_current_scope(tmp_path):
     Test visit_Name when current_scope is None.
     """
     # Arrange
-    code_path = str(tmp_path)
     file_path = tmp_path / "test_file.py"
     file_path.write_text('print("Hello")')
 

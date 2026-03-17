@@ -9,6 +9,7 @@ class TestCase(BaseModel):
         imports (list[str]): The specific import statements required for this test to run.
         code (str): The full Python source code for the test function.
     """
+
     imports: list[str] = Field(..., description="Test imports: ['from module import function', ...]")
     code: str = Field(..., description="Code: def test_<name>(): ...")
 
@@ -18,7 +19,8 @@ class LLMTestOutput(BaseModel):
     Schema for the structured output expected from an LLM generating multiple tests.
 
     Attributes:
-        tests (dict[str, TestCase]): A mapping of test names to their 
+        tests (dict[str, TestCase]): A mapping of test names to their
             corresponding TestCase objects.
     """
+
     tests: dict[str, TestCase] = Field(..., description="Unit tests dict of TestCase")

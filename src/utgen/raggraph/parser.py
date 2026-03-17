@@ -1,15 +1,16 @@
-import os
 import ast
-from typing import Optional, Any
+import os
+from typing import Any
+
 import networkx as nx
 
-from utgen.raggraph.utils import get_source_segment, canonical_id, normalize_signature
+from utgen.raggraph.utils import canonical_id, get_source_segment, normalize_signature
 
 
 class CodeGraphBuilder1(ast.NodeVisitor):
     """
     First pass of code analysis: Builds nodes and structural edges.
-    
+
     This visitor creates nodes for files, classes, and functions/methods.
     It establishes 'defines' and 'has_method' relationships.
     """
@@ -24,17 +25,17 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             graph (nx.DiGraph): The graph instance to populate.
         """
         self.file_path: str = file_path
-        self.file_path_clean: str = file_path.removeprefix(f'{code_path}/')
+        self.file_path_clean: str = file_path.removeprefix(f"{code_path}/")
         self.graph: nx.DiGraph = graph
 
         self.current_file_id: str = canonical_id(self.file_path_clean)
-        self.current_class: Optional[str] = None
+        self.current_class: str | None = None
         self.function_stack: list[str] = []
-        self.current_scope: Optional[str] = None
+        self.current_scope: str | None = None
 
         # --- Create file node ---
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(file_path, encoding="utf-8", errors="replace") as f:
                 content = f.read()
         except OSError:
             content = ""
@@ -46,7 +47,7 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             file=self.file_path_clean,
             signature="None",
             docstring="None",
-            source=content
+            source=content,
         )
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -60,7 +61,7 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             file=self.file_path_clean,
             signature=node.name or "None",
             docstring=ast.get_docstring(node) or "None",
-            source=get_source_segment(self.file_path, node)
+            source=get_source_segment(self.file_path, node),
         )
 
         # The file defines the class
@@ -95,7 +96,7 @@ class CodeGraphBuilder1(ast.NodeVisitor):
             file=self.file_path_clean,
             signature=normalize_signature(node) or "None",
             docstring=ast.get_docstring(node) or "None",
-            source=get_source_segment(self.file_path, node)
+            source=get_source_segment(self.file_path, node),
         )
 
         # Parent relationship logic
@@ -118,10 +119,11 @@ class CodeGraphBuilder1(ast.NodeVisitor):
 class CodeGraphBuilder2(ast.NodeVisitor):
     """
     Second pass of code analysis: Detects semantic relationships.
-    
-    This visitor finds 'calls' and 'references' by looking up symbols 
+
+    This visitor finds 'calls' and 'references' by looking up symbols
     in the previously built graph.
     """
+
     def __init__(self, code_path: str, file_path: str, graph: nx.DiGraph):
         """
         Initializes the second-pass builder.
@@ -132,25 +134,25 @@ class CodeGraphBuilder2(ast.NodeVisitor):
             graph (nx.DiGraph): The graph populated in Pass 1.
         """
         self.file_path: str = file_path
-        self.file_path_clean: str = file_path.removeprefix(f'{code_path}/')
+        self.file_path_clean: str = file_path.removeprefix(f"{code_path}/")
         self.graph: nx.DiGraph = graph
 
         self.current_file_id: str = canonical_id(self.file_path_clean)
-        self.current_class: Optional[str] = None
+        self.current_class: str | None = None
         self.function_stack: list[str] = []
-        self.current_scope: Optional[str] = None
-        self.dst_canonical_id: Optional[str] = None
+        self.current_scope: str | None = None
+        self.dst_canonical_id: str | None = None
 
     @staticmethod
     def attach_parents(node: ast.AST) -> None:
         """
         Recursively attaches a 'parent' attribute to every node in the AST.
-        
+
         Args:
             node (ast.AST): The root node of the tree to process.
         """
         for child in ast.iter_child_nodes(node):
-            setattr(child, "parent", node)
+            child.parent = node
             CodeGraphBuilder2.attach_parents(child)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:

@@ -10,8 +10,8 @@ from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 
 from utgen.constants import GUARDRAIL_MAX_RETRIES
-from utgen.test_generation_crew.llm_config import openrouter_llm
 from utgen.test_generation_crew.guardrails import validate_tests_schema
+from utgen.test_generation_crew.llm_config import openrouter_llm
 
 
 @CrewBase

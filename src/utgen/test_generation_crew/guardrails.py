@@ -13,8 +13,8 @@ from typing import Any
 
 from crewai import TaskOutput
 
-from utgen.test_generation_crew.schemas import TestCase
 from utgen.logger import logger
+from utgen.test_generation_crew.schemas import TestCase
 
 
 def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
@@ -71,7 +71,7 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
 
         # B. Python Syntax Check
         # Assuming the 'content' dict has a key like 'code' or 'content' containing the Python string
-        python_imports = content.get("imports", "") 
+        python_imports = content.get("imports", "")
         if python_imports:
             python_imports = "\n".join(python_imports)
             try:
@@ -79,7 +79,7 @@ def validate_tests_schema(result: TaskOutput) -> tuple[bool, Any]:
             except SyntaxError as e:
                 errors.append(f"Test '{test_id}' syntax error: {e.msg} at line {e.lineno}")
 
-        python_code = content.get("code", "") 
+        python_code = content.get("code", "")
         if python_code:
             try:
                 ast.parse(python_code)

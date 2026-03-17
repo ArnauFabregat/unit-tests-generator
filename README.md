@@ -32,6 +32,11 @@ The system operates through a multi-stage pipeline:
 ## Usage
 TBD
 
+Required in `.env`:
+LLM_OPENROUTER_MODEL = ""
+LLM_OPENROUTER_API_KEY = ""
+*In crewai format (link to page)
+
 ## Examples
 Upload `repo.graphml` to https://lite.gephi.org/.
 
@@ -175,10 +180,8 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
-- Run pre-commit
 - Study the possibility to run the tests in docker isolated environment for safety
 - Run pytest cov as last step
 - Add the remaining guardrails
 - Replace crewai by langgraph
-- Add license
 - Publish to PyPI

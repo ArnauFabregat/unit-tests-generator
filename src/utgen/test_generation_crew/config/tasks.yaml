@@ -5,22 +5,22 @@ generate_unit_tests_task:
 
     CRITICAL INSTRUCTIONS:
     1. **Target Code**: Focus on the source code under `### NODE INFO ###`.
-    2. **Mocking**: Use `### OUTGOING EDGES ###` to identify dependencies. 
-       Cross-reference with `### NEIGHBOR NODE DETAILS ###` to create 
+    2. **Mocking**: Use `### OUTGOING EDGES ###` to identify dependencies.
+       Cross-reference with `### NEIGHBOR NODE DETAILS ###` to create
        accurate `unittest.mock` objects that return the correct types.
-    3. **Input Selection (Incoming Edges)**: Analyze `### INCOMING EDGES ###`. 
-       If other functions call this node, use those relationships to 
-       infer realistic input values, common arguments, and the 
+    3. **Input Selection (Incoming Edges)**: Analyze `### INCOMING EDGES ###`.
+       If other functions call this node, use those relationships to
+       infer realistic input values, common arguments, and the
        expected state of the system before the call.
-    4. **Edge Cases**: Contrast the "intended use" (Incoming Edges) 
-       with the "allowed use" (Signature/Types) to find boundary 
+    4. **Edge Cases**: Contrast the "intended use" (Incoming Edges)
+       with the "allowed use" (Signature/Types) to find boundary
        conditions and potential crash points.
-    5. **Naming**: Use the `file::type::name` to determine the correct 
+    5. **Naming**: Use the `file::type::name` to determine the correct
        import paths for the test file.
-    6. **Avoid Over-Mocking**: 
+    6. **Avoid Over-Mocking**:
        - DO NOT mock built-in functions like `open`, `os.path`, or `ast` unless strictly necessary for a crash test.
        - Use `pytest`'s `tmp_path` fixture to create real temporary files and directories instead of mocking the filesystem.
-    7. **Prefer Real Logic**: 
+    7. **Prefer Real Logic**:
        - Always attempt to instantiate the real class using the actual code from `utgen`.
 
     CONTEXT FROM GRAPH:
@@ -28,7 +28,7 @@ generate_unit_tests_task:
   expected_output: >
     A structured JSON object mapped to the LLMTestOutput schema: {'tests': {'ID': TestCase}}
     It must contain 'tests' key where each TestCase item includes:
-    - 'imports' (list[str]): All necessary import statements specifically required for this test case 
+    - 'imports' (list[str]): All necessary import statements specifically required for this test case
        (e.g., ['import pytest', 'from unittest.mock import Mock']).
     - 'code' (str): The full Python source code for the test function.
     The values must be valid Python-parseable code without any conversational filler.

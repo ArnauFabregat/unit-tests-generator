@@ -1,13 +1,12 @@
 import json
-from pathlib import Path
 from collections import defaultdict
-
+from pathlib import Path
 
 from utgen.logger import logger
-from utgen.raggraph.walker import build_graph_from_directory
 from utgen.raggraph.utils import get_node_context
+from utgen.raggraph.walker import build_graph_from_directory
 from utgen.test_generation_crew.crew import TestGenerationCrew
-from utgen.validation import validate_individual_test, save_and_clean_tests
+from utgen.validation import save_and_clean_tests, validate_individual_test
 
 
 def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> None:
@@ -29,7 +28,7 @@ def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> N
     # TODO: afegir guardrails que falten
     test_generator = TestGenerationCrew(guardrail_max_retries=5, verbose=False)
 
-    for node_id, data in list(g.nodes(data=True)):
+    for node_id, data in list(g.nodes(data=True))[20:30]:
         if data["type"] in ["function", "method"]:
             logger.info(f"Generating tests for node: {node_id}")
             try:
@@ -47,9 +46,9 @@ def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> N
                 p = Path(data["file"])
                 new_filename = f"test_{p.stem}{p.suffix}"
                 save_path = (p.parent / new_filename).as_posix()
-                tests_results[save_path][node_id] = response_dict['tests']
+                tests_results[save_path][node_id] = response_dict["tests"]
 
-            except Exception as e:
+            except Exception:
                 # This catches guardrail retries exceeded, JSON parsing errors, etc.
                 logger.error(f"Failed to generate tests for {node_id} after max retries.")
                 # Use 'continue' to skip the rest of this iteration and move to the next node
@@ -60,9 +59,14 @@ def main(source_code_dir: str, tests_output_dir: str, save_graph_path: str) -> N
     for save_path, nodes in tests_results.items():
         accepted_tests: list[tuple[str, str]] = []
         for node_id, tests in nodes.items():
-            base_import = 'from ' + node_id.split("::")[0][:-3].replace("/", ".") + ' import ' + node_id.split("::")[-1].split(".")[0]
+            base_import = (
+                "from "
+                + node_id.split("::")[0][:-3].replace("/", ".")
+                + " import "
+                + node_id.split("::")[-1].split(".")[0]
+            )
             for name, values in tests.items():
-                imports, code = values['imports'], values['code']
+                imports, code = values["imports"], values["code"]
                 if base_import not in imports:
                     logger.debug(f"Added missing import `{base_import}` for test `{name}`.")
                     imports.append(base_import)

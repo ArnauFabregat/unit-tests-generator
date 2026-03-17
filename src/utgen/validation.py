@@ -1,5 +1,6 @@
-import subprocess
 import os
+import subprocess
+
 from utgen.logger import logger
 
 
@@ -21,29 +22,26 @@ def validate_individual_test(import_code: str, test_code: str) -> bool:
     with open(temp_filename, "w", encoding="utf-8", errors="replace") as f:
         f.write(full_code)
 
-    # Execute pytest. 
+    # Execute pytest.
     # -q: quiet mode
     # --tb=no: disable traceback to keep console clean
-    result = subprocess.run(
-        ["pytest", temp_filename, "-q", "--tb=no"], 
-        capture_output=True
-    )
-    
+    result = subprocess.run(["pytest", temp_filename, "-q", "--tb=no"], capture_output=True)
+
     # Cleanup: remove the temporary file after execution
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
-        
+
     return result.returncode == 0
 
+
 def save_and_clean_tests(
-    valid_tests: list[tuple[str, str]], 
-    destination: str = "../tests/llm_generated_tests.py"
+    valid_tests: list[tuple[str, str]], destination: str = "../tests/llm_generated_tests.py"
 ) -> None:
     """
     Aggregates valid tests, saves them to a file, and formats the output using Ruff.
 
     Args:
-        valid_tests (List[Tuple[str, str]]): A list of tuples containing 
+        valid_tests (List[Tuple[str, str]]): A list of tuples containing
             (import_string, test_body_string).
         destination (str): The file path where the cleaned tests will be saved.
     """
@@ -57,11 +55,11 @@ def save_and_clean_tests(
     # 1. Separate into two blocks: all imports and all test bodies
     import_block: list[str] = []
     test_block: list[str] = []
-    
+
     for imp, code in valid_tests:
         import_block.append(imp.strip())
         test_block.append(code.strip())
-    
+
     # 2. Concatenate: First all imports, then all tests
     # We join with newlines to ensure clean separation
     final_content = "\n".join(import_block) + "\n\n" + "\n\n".join(test_block)
@@ -71,13 +69,13 @@ def save_and_clean_tests(
 
     # 3. Use Ruff to organize and clean the generated file
     logger.debug(f"Cleaning {destination} with Ruff...")
-    
+
     # Sort imports and remove duplicates (isort behavior)
     subprocess.run(["ruff", "check", "--select", "I", "--fix", destination], capture_output=True)
-    
+
     # Remove unused variables/imports and fix common linting errors
     subprocess.run(["ruff", "check", "--fix", destination], capture_output=True)
-    
+
     # Format code (Black-style formatting)
     subprocess.run(["ruff", "format", destination], capture_output=True)
 

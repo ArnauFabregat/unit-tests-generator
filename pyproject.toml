@@ -1,0 +1,85 @@
+[project]
+name = "unit-tests-generator"
+version = "0.1.0"
+description = "Open source project to build a unit tests generator in Python."
+readme = "README.md"
+requires-python = ">=3.13"
+license = {text = "MIT"}
+authors = [
+    {name = "Arnau Fabregat"}
+]
+dependencies = [
+    "crewai[google-genai]>=1.10.1",
+    "litellm>=1.82.1",
+    "loguru>=0.7.3",
+    "networkx>=3.6.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "typer>=0.23.1",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+]
+
+[dependency-groups]
+# Tooling — not required to run your app
+dev = [
+  "pre-commit>=3.7",
+  "ruff>=0.5",
+  "mypy>=1.8",
+  "ipykernel>=7.2.0",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["utgen*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+    "**/__init__.py",
+]
+
+# Ruff configuration (https://docs.astral.sh/ruff/configuration/)
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+# A solid default selection for apps:
+# E/F: pycodestyle+pyflakes, B: bugbear, I: import sorting, UP: pyupgrade
+select = ["E", "F", "B", "I", "UP"]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+# Ruff formatter is Black-like by default; you can keep defaults or tweak.
+quote-style = "double"
+
+# Mypy configuration
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+no_implicit_optional = true
+ignore_missing_imports = true  # This is pragmatic for apps early on; tighten later
+files = ["src", "tests"]  # Run mypy on these folders (when invoked without explicit paths)
+
+[project.scripts]
+utgen = "utgen.main:app"

@@ -32,10 +32,15 @@ The system operates through a multi-stage pipeline:
 ## Usage
 TBD
 
-Required in `.env`:
+### Setting up your LLM
+Required environment variables:
+```bash
+# .env file
 LLM_OPENROUTER_MODEL = ""
 LLM_OPENROUTER_API_KEY = ""
-*In crewai format (link to page)
+```
+- Powered by CrewAI and OpenRouter: https://docs.crewai.com/en/concepts/llms#open-router.
+- OpenRouter models: https://openrouter.ai/models.
 
 ## Examples
 Upload `repo.graphml` to https://lite.gephi.org/.

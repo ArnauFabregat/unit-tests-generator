@@ -1,0 +1,49 @@
+# .github/workflows/publish.yml
+name: Publish Python Package to PyPI
+
+# 1. TRIGGER: This tells GitHub WHEN to run this script.
+# We only want to publish when a "Release" is created on the GitHub UI.
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-n-publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    
+    # 2. PERMISSIONS: This is the "Magic" for Trusted Publishing.
+    # 'id-token: write' allows GitHub to generate a secure token that PyPI trusts.
+    # 'contents: read' allows the script to see your code.
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # 3. CHECKOUT: Downloads your code from GitHub to the runner.
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 4. ENVIRONMENT: Sets up the specific Python version.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # 5. INSTALL BUILD TOOLS: Installs 'build', the standard tool for packaging.
+      - name: Install build dependencies
+        run: python -m pip install build
+
+      # 6. BUILD: Runs 'python -m build'.
+      # This looks at your 'pyproject.toml' and creates two files in a /dist folder:
+      # - A .tar.gz (Source Distribution)
+      # - A .whl (Built Distribution/Wheel)
+      # These are the actual files that get uploaded to PyPI.
+      - name: Build binary wheel and source tarball
+        run: python -m build
+
+      # 7. UPLOAD: Uses the official PyPA action to send files to PyPI.
+      # Because of the 'permissions' above and your PyPI settings, 
+      # it doesn't need a password or API key.
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

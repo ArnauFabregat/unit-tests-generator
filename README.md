@@ -213,9 +213,7 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
-- rename repo to "unit-tests-generator"
 - Study the possibility to run the tests in docker isolated environment for safety
-- Run pytest cov as last step
 - Add the remaining guardrails: not allow to write files from test_*.py
 - Replace crewai by langgraph
 - Publish to PyPI

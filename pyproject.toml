@@ -26,6 +26,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+[project.urls]
+Repository = "https://github.com/ArnauFabregat/unit-tests-generator"
+
 [dependency-groups]
 # Tooling — not required to run your app
 dev = [

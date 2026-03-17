@@ -20,7 +20,7 @@ The system operates through a multi-stage pipeline:
 pip install unit-tests-generator
 
 # Generate tests using source and output paths
-utgen -s ./src -t ./tests
+utgen -s src/ -t tests/
 ```
 
 ### Setting up your LLM

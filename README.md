@@ -26,7 +26,8 @@ The system operates through a multi-stage pipeline:
     - [Create a new virtualenv with the project's dependencies](#create-a-new-virtualenv-with-the-projects-dependencies)
     - [Checking if the project's virtual environment is active](#checking-if-the-projects-virtual-environment-is-active)
     - [Updating the project's dependencies](#updating-the-projects-dependencies)
-6. [TODO](#todo)
+6. [LICENSE](#license)
+7. [TODO](#todo)
 
 ## Usage
 TBD
@@ -169,6 +170,9 @@ This command will update the project's files `pyproject.toml` and `uv.lock` auto
 ---
 Open a terminal in VSCode and execute the following command:
 * `uv sync`
+
+## License
+MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
 - Run pre-commit

@@ -79,7 +79,7 @@ Upload `repo.graphml` to https://lite.gephi.org/.
 - This repository:
     - Code coverage:
 - Example for repository https://github.com/ArnauFabregat/probability_estimation
-![Diagram](docs/probability-estimation-repo-graph.png)
+![Diagram](https://raw.githubusercontent.com/ArnauFabregat/unit-tests-generator/main/docs/probability-estimation-repo-graph.png)
     - Code coverage:
 - Example for repository
     - Code coverage

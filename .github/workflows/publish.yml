@@ -11,7 +11,7 @@ jobs:
   build-n-publish:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
-    
+
     # 2. PERMISSIONS: This is the "Magic" for Trusted Publishing.
     # 'id-token: write' allows GitHub to generate a secure token that PyPI trusts.
     # 'contents: read' allows the script to see your code.
@@ -23,7 +23,7 @@ jobs:
       # 3. CHECKOUT: Downloads your code from GitHub to the runner.
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       # 4. ENVIRONMENT: Sets up the specific Python version.
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,7 +43,7 @@ jobs:
         run: python -m build
 
       # 7. UPLOAD: Uses the official PyPA action to send files to PyPI.
-      # Because of the 'permissions' above and your PyPI settings, 
+      # Because of the 'permissions' above and your PyPI settings,
       # it doesn't need a password or API key.
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -5,7 +5,7 @@ from pathlib import Path
 from utgen.logger import logger
 from utgen.raggraph.utils import get_node_context
 from utgen.raggraph.walker import build_graph_from_directory
-from utgen.test_generation_crew.crew import TestGenerationCrew
+from utgen.test_generation_crew.crew import TestGenerationCrew  # type: ignore
 from utgen.validation import save_and_clean_tests, validate_individual_test
 
 

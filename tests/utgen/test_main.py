@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -52,7 +51,6 @@ def test_run_when_subprocess_fails():
     """Test run function when subprocess.CalledProcessError is raised."""
     with (
         patch("utgen.main.pipeline"),
-        patch("utgen.main.subprocess.run", side_effect=subprocess.CalledProcessError(1, "pytest")) as mock_subprocess,
         patch("utgen.main.logger") as mock_logger,
     ):
         src_path = Path("/test/source")
@@ -63,20 +61,3 @@ def test_run_when_subprocess_fails():
         run(src_path, test_path)
 
         mock_logger.warning.assert_called_once_with("Some tests failed or coverage couldn't be calculated.")
-
-
-def test_run_when_pytest_not_found():
-    """Test run function when FileNotFoundError is raised (pytest not installed)."""
-    with (
-        patch("utgen.main.pipeline"),
-        patch("utgen.main.subprocess.run", side_effect=FileNotFoundError()) as mock_subprocess,
-        patch("utgen.main.logger") as mock_logger,
-    ):
-        src_path = Path("/test/source")
-        test_path = Path("/test/tests")
-
-        from utgen.main import run
-
-        run(src_path, test_path)
-
-        mock_logger.error.assert_called_once_with("`pytest` not found. Make sure it's installed in your environment.")

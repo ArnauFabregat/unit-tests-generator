@@ -77,7 +77,7 @@ class CodeGraphBuilder1(ast.NodeVisitor):
         is_method = self.current_class is not None
         is_nested = len(self.function_stack) > 0 and not is_method
 
-        if is_method:
+        if is_method and self.current_class:
             parent_type = "method"
             name = f"{self.current_class.split('::')[-1]}.{node.name}"
         elif is_nested:
@@ -152,7 +152,7 @@ class CodeGraphBuilder2(ast.NodeVisitor):
             node (ast.AST): The root node of the tree to process.
         """
         for child in ast.iter_child_nodes(node):
-            child.parent = node
+            child.parent = node  # type: ignore[attr-defined]
             CodeGraphBuilder2.attach_parents(child)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -168,7 +168,7 @@ class CodeGraphBuilder2(ast.NodeVisitor):
         is_method = self.current_class is not None
         is_nested = len(self.function_stack) > 0 and not is_method
 
-        if is_method:
+        if is_method and self.current_class:
             parent_type = "method"
             name = f"{self.current_class.split('::')[-1]}.{node.name}"
         elif is_nested:

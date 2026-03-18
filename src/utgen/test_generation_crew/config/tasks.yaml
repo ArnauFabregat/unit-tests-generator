@@ -20,8 +20,8 @@ generate_unit_tests_task:
     6. **Avoid Over-Mocking**:
        - DO NOT mock built-in functions like `open`, `os.path`, or `ast` unless strictly necessary for a crash test.
        - Use `pytest`'s `tmp_path` fixture to create real temporary files and directories instead of mocking the filesystem.
-    7. **Prefer Real Logic**:
-       - Always attempt to instantiate the real class using the actual code from `utgen`.
+    7. **Prefer Real Logic**: Always attempt to instantiate the real class using the actual code from `utgen`.
+    8. **Limit**: don't add more than 4 tests
 
     CONTEXT FROM GRAPH:
     {graph_context}

@@ -38,7 +38,3 @@ jobs:
         # Executa els tests i genera l'informe de cobertura que tens configurat
         run: |
           pytest --cov=src
-        env:
-          # Posem valors ficticis perquè el codi no doni ValueError
-          LLM_OPENROUTER_MODEL: "openrouter/openrouter/el-meu-llm"
-          LLM_OPENROUTER_API_KEY: "sk-fake-key-for-tests"

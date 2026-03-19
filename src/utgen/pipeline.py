@@ -11,49 +11,47 @@ from utgen.test_generation_crew.crew import TestGenerationCrew  # type: ignore
 from utgen.validation import save_and_clean_tests, validate_individual_test
 
 
-def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str = "") -> None:
+def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str = "", overwrite: bool = False) -> None:
     """
     Main function to orchestrate the test generation process.
     Args:
         source_code_dir (str): Directory containing the source code to analyze.
         tests_output_dir (str): Directory where generated tests will be saved.
         save_graph_path (str): Path to save the graph representation.
+        overwrite (bool): If False, skip generation for files that already have a test file.
     """
     logger.info("Creating graph from source code...")
     g = build_graph_from_directory(code_path=source_code_dir, save_graph_path=save_graph_path)
     logger.info(f"Graph built with {g.number_of_nodes()} nodes and {g.number_of_edges()} edges.")
 
     logger.info("Started test generation process...")
-    # Define defaultdict of dicts
     tests_results: defaultdict[str, dict[str, dict]] = defaultdict(dict)
-
-    # TODO: afegir guardrails que falten
     test_generator = TestGenerationCrew(guardrail_max_retries=5, verbose=False)
 
     for node_id, data in list(g.nodes(data=True)):
         if data["type"] in ["function", "method"]:
+            p = Path(data["file"])
+            new_filename = f"test_{p.stem}{p.suffix}"
+            target_test_file = Path(tests_output_dir) / p.parent / new_filename
+
+            if not overwrite and target_test_file.exists():
+                logger.info(f"Skipping {node_id}: Test file already exists at {target_test_file}")
+                continue
+
             logger.info(f"Generating tests for node: {node_id}")
             try:
-                # Get context
                 context = get_node_context(g=g, node_id=node_id)
                 inputs = {"graph_context": context}
 
-                # Generate tests
                 response = test_generator.crew().kickoff(inputs=inputs)
-
-                # Convert string to dictionary
                 response_dict = json.loads(response.raw)
 
-                # Store results
-                p = Path(data["file"])
-                new_filename = f"test_{p.stem}{p.suffix}"
+                # Store results using the relative path as key
                 save_path = (p.parent / new_filename).as_posix()
                 tests_results[save_path][node_id] = response_dict["tests"]
 
             except Exception:
-                # This catches guardrail retries exceeded, JSON parsing errors, etc.
-                logger.error(f"Failed to generate tests for {node_id} after max retries.")
-                # Use 'continue' to skip the rest of this iteration and move to the next node
+                logger.error(f"Failed to generate tests for {node_id}.")
                 continue
     logger.info("Test generation process completed.")
 

@@ -69,15 +69,20 @@ LLM_OPENROUTER_API_KEY = ""
 | `--src_path` | `-s` | Path to the directory containing your source code. | **Yes** | — |
 | `--test_path` | `-t` | Path to the directory where generated tests will be saved. | **Yes** | — |
 | `--graph_path` | `-g` | Path to export graph data. | No | `None` |
+| `--overwrite` | `-o` | If provided, regenerates tests even if the file already exists in the test directory. | No | `False` |
 | `--help` | — | Show the help message and exit. | No | — |
 
-Run a standard generation without Graph export:
+By default, `utgen` skips files that already have a corresponding test file in the output directory and don't export the repository graph:
 ```bash
 utgen -s src/ -t tests/
 ```
 Export graph:
 ```bash
 utgen -s src/ -t tests/ -g data/
+```
+To ignore existing test files and regenerate everything from scratch:
+```bash
+utgen -s src/ -t tests/ -o
 ```
 
 ## Examples
@@ -217,7 +222,6 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
-- Add option to main to calculate tests only if file not already in tests/ (filter nodes by file)
 - Complete readme Examples section
 - Study the possibility to run the tests in docker isolated environment for safety
 - Add the remaining guardrails: not allow to write files from test_*.py, not allow to pop up plots or similar

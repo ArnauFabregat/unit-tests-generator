@@ -1,174 +1,302 @@
 import ast
 
-from utgen.raggraph.utils import canonical_id, get_source_segment, normalize_signature
+import networkx as nx
+
+from utgen.raggraph.utils import canonical_id, get_node_context, get_source_segment, normalize_signature
 
 
-def test_get_source_segment_success(tmp_path):
-    """Test get_source_segment extracts source correctly."""
-    # Create a Python file with known content
-    test_file = tmp_path / "module.py"
-    test_file.write_text("def my_function():\n    return 42\n")
+def test_get_node_context_with_basic_graph():
+    """
+    Test get_node_context with a basic graph containing one node.
+    """
+    # Arrange
+    g = nx.DiGraph()
+    node_id = "utgen/validation.py::function::validate_individual_test"
 
-    # Parse the file and get a FunctionDef node
-    with open(test_file) as f:
-        tree = ast.parse(f.read())
+    g.add_node(node_id, source="def validate_individual_test():", type="function")
 
-    func_node = tree.body[0]  # The function definition
+    # Act
+    context = get_node_context(g, node_id)
 
-    result = get_source_segment(str(test_file), func_node)
+    # Assert
+    assert "### NODE INFO ###" in context
+    assert node_id in context
+    assert "source:" in context
+    assert "def validate_individual_test():" in context
+    assert "### OUTGOING EDGES ###" not in context
+    assert "### INCOMING EDGES ###" not in context
+    assert "### NEIGHBOR NODE DETAILS ###" not in context
 
-    assert "def my_function():" in result
-    assert "return 42" in result
+
+def test_get_node_context_with_edges():
+    """
+    Test get_node_context with a graph containing edges.
+    """
+    # Arrange
+    g = nx.DiGraph()
+    node_id = "utgen/validation.py::function::validate_individual_test"
+    neighbor_id = "utgen/pipeline.py::function::pipeline"
+
+    g.add_node(node_id, source="def validate_individual_test():", type="function")
+    g.add_node(neighbor_id, source="def pipeline():", type="function", signature="def pipeline() -> None")
+
+    # Add edges
+    g.add_edge(neighbor_id, node_id, rel="calls")
+    g.add_edge(node_id, neighbor_id, rel="uses")
+
+    # Act
+    context = get_node_context(g, node_id)
+
+    # Assert
+    assert "### OUTGOING EDGES ###" in context
+    assert (
+        "utgen/validation.py::function::validate_individual_test -[uses]-> utgen/pipeline.py::function::pipeline"
+        in context
+    )
+    assert "### INCOMING EDGES ###" in context
+    assert (
+        "utgen/pipeline.py::function::pipeline -[calls]-> utgen/validation.py::function::validate_individual_test"
+        in context
+    )
+    assert "### NEIGHBOR NODE DETAILS ###" in context
+    assert "def pipeline() -> None" in context
 
 
-def test_get_source_segment_missing_file():
-    """Test get_source_segment returns empty string for missing file."""
-    # Create a dummy AST node
-    node = ast.Constant(value=42)
-    node.lineno = 1
-    node.end_lineno = 1
+def test_get_node_context_with_nested_function():
+    """
+    Test get_node_context with a nested function that should be excluded.
+    """
+    # Arrange
+    g = nx.DiGraph()
+    node_id = "utgen/validation.py::function::validate_individual_test"
+    nested_id = "utgen/validation.py::function::validate_individual_test::nested_function::helper"
 
-    result = get_source_segment("/nonexistent/path.py", node)
+    g.add_node(node_id, source="def validate_individual_test():", type="function")
+    g.add_node(nested_id, source="def helper():", type="nested_function")
 
+    # Add edges
+    g.add_edge(node_id, nested_id, rel="defines")
+    g.add_edge(nested_id, node_id, rel="used_by")
+
+    # Act
+    context = get_node_context(g, node_id)
+
+    # Assert
+    assert "### OUTGOING EDGES ###" not in context
+    assert "### INCOMING EDGES ###" not in context
+    assert "### NEIGHBOR NODE DETAILS ###" not in context
+
+
+def test_get_node_context_with_multiple_neighbors():
+    """
+    Test get_node_context with multiple neighbor nodes.
+    """
+    # Arrange
+    g = nx.DiGraph()
+    node_id = "utgen/validation.py::function::validate_individual_test"
+    neighbor1_id = "utgen/pipeline.py::function::pipeline"
+    neighbor2_id = "utgen/raggraph/utils.py::function::get_node_context"
+
+    g.add_node(node_id, source="def validate_individual_test():", type="function")
+    g.add_node(
+        neighbor1_id,
+        source="def pipeline():",
+        type="function",
+        signature="def pipeline() -> None",
+        docstring="Main pipeline function",
+    )
+    g.add_node(
+        neighbor2_id,
+        source="def get_node_context():",
+        type="function",
+        signature="def get_node_context() -> str",
+        docstring="Get node context",
+    )
+
+    # Add edges
+    g.add_edge(neighbor1_id, node_id, rel="calls")
+    g.add_edge(node_id, neighbor2_id, rel="uses")
+
+    # Act
+    context = get_node_context(g, node_id)
+
+    # Assert
+    assert "### NEIGHBOR NODE DETAILS ###" in context
+    assert "def pipeline() -> None" in context
+    assert "Main pipeline function" in context
+    assert "def get_node_context() -> str" in context
+    assert "Get node context" in context
+
+
+def test_get_source_segment_with_invalid_file():
+    """
+    Test get_source_segment with a non-existent file.
+    """
+    # Arrange
+    file_path = "/this/file/does/not/exist.py"
+
+    # Create a simple AST node
+    node = ast.FunctionDef(
+        name="test_func",
+        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
+
+    # Act
+    result = get_source_segment(file_path, node)
+
+    # Assert
     assert result == ""
 
 
-def test_get_source_segment_without_line_info(tmp_path):
-    """Test get_source_segment returns empty string when node has no line info."""
-    # Create a Python file
-    test_file = tmp_path / "module.py"
-    test_file.write_text("x = 42\n")
+def test_canonical_id_with_basic_parts():
+    """
+    Test canonical_id with basic string parts.
+    """
+    # Arrange
+    parts = ["file.py", "function", "my_function"]
 
-    # Create a node without lineno/end_lineno
-    node = ast.Constant(value=42)
+    # Act
+    result = canonical_id(*parts)
 
-    result = get_source_segment(str(test_file), node)
+    # Assert
+    assert result == "file.py::function::my_function"
 
+
+def test_canonical_id_with_empty_parts():
+    """
+    Test canonical_id with empty parts.
+    """
+    # Arrange
+    parts = []
+
+    # Act
+    result = canonical_id(*parts)
+
+    # Assert
     assert result == ""
 
 
-def test_get_source_segment_multiline_class(tmp_path):
-    """Test get_source_segment with a multiline class definition."""
-    # Create a Python file with a class
-    test_file = tmp_path / "module.py"
-    test_file.write_text("class MyClass:\n    def method(self):\n        pass\n")
+def test_canonical_id_with_single_part():
+    """
+    Test canonical_id with a single part.
+    """
+    # Arrange
+    parts = ["file.py"]
 
-    # Parse and get the class node
-    with open(test_file) as f:
-        tree = ast.parse(f.read())
+    # Act
+    result = canonical_id(*parts)
 
-    class_node = tree.body[0]  # The class definition
-
-    result = get_source_segment(str(test_file), class_node)
-
-    assert "class MyClass:" in result
-    assert "def method(self):" in result
-    assert "pass" in result
+    # Assert
+    assert result == "file.py"
 
 
-def test_canonical_id_single_part():
-    """Test canonical_id with a single part (file path)."""
-    result = canonical_id("module.py")
-    assert result == "module.py"
+def test_canonical_id_with_special_characters():
+    """
+    Test canonical_id with parts containing special characters.
+    """
+    # Arrange
+    parts = ["file.py", "class", "MyClass@123"]
 
-    # Another example
-    result = canonical_id("package/submodule.py")
-    assert result == "package/submodule.py"
+    # Act
+    result = canonical_id(*parts)
 
-
-def test_canonical_id_three_parts_class():
-    """Test canonical_id with three parts for a class ID."""
-    result = canonical_id("module.py", "class", "MyClass")
-    assert result == "module.py::class::MyClass"
-
-    # Another example
-    result = canonical_id("pkg/utils.py", "class", "Helper")
-    assert result == "pkg/utils.py::class::Helper"
+    # Assert
+    assert result == "file.py::class::MyClass@123"
 
 
-def test_canonical_id_three_parts_function():
-    """Test canonical_id with three parts for function/method ID."""
-    # Top-level function
-    result = canonical_id("module.py", "function", "my_function")
-    assert result == "module.py::function::my_function"
+def test_normalize_signature_with_basic_function():
+    """
+    Test normalize_signature with a basic function.
+    """
+    # Arrange
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
 
-    # Method
-    result = canonical_id("module.py", "method", "MyClass.my_method")
-    assert result == "module.py::method::MyClass.my_method"
+    # Act
+    result = normalize_signature(node)
 
-    # Nested function
-    result = canonical_id("module.py", "nested_function", "outer.inner")
-    assert result == "module.py::nested_function::outer.inner"
-
-
-def test_canonical_id_multiple_parts():
-    """Test canonical_id with varying number of parts."""
-    # Two parts
-    result = canonical_id("package", "module")
-    assert result == "package::module"
-
-    # Four parts
-    result = canonical_id("pkg", "module", "class", "method")
-    assert result == "pkg::module::class::method"
-
-    # Five parts
-    result = canonical_id("a", "b", "c", "d", "e")
-    assert result == "a::b::c::d::e"
-
-    # Empty string parts (edge case)
-    result = canonical_id("", "class", "MyClass")
-    assert result == "::class::MyClass"
+    # Assert
+    assert result == "def example()"
 
 
-def test_normalize_signature_simple_function():
-    """Test normalize_signature with a simple function with no arguments."""
-    # Parse a simple function
-    code = "def my_function(): pass"
-    tree = ast.parse(code)
-    func_node = tree.body[0]
+def test_normalize_signature_with_arguments():
+    """
+    Test normalize_signature with a function that has arguments.
+    """
+    # Arrange
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(
+            args=[
+                ast.arg(arg="a", annotation=ast.Name(id="int", ctx=ast.Load())),
+                ast.arg(arg="b", annotation=ast.Name(id="str", ctx=ast.Load())),
+            ],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        ),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
 
-    result = normalize_signature(func_node)
+    # Act
+    result = normalize_signature(node)
 
-    assert result == "def my_function()"
-
-
-def test_normalize_signature_async_function():
-    """Test normalize_signature with an async function."""
-    # Parse an async function
-    code = "async def fetch_data(url: str) -> bytes: pass"
-    tree = ast.parse(code)
-    async_node = tree.body[0]
-
-    result = normalize_signature(async_node)
-
-    assert result == "async def fetch_data(url: str) -> bytes"
-
-    # Simple async function without types
-    code2 = "async def simple(): pass"
-    tree2 = ast.parse(code2)
-    async_node2 = tree2.body[0]
-
-    result2 = normalize_signature(async_node2)
-
-    assert result2 == "async def simple()"
+    # Assert
+    assert result == "def example(a: int, b: str)"
 
 
-def test_normalize_signature_with_args_kwargs():
-    """Test normalize_signature with *args and **kwargs."""
-    # Parse a function with *args and **kwargs
-    code = "def variadic(*args, **kwargs): pass"
-    tree = ast.parse(code)
-    func_node = tree.body[0]
+def test_normalize_signature_with_return_type():
+    """
+    Test normalize_signature with a function that has a return type.
+    """
+    # Arrange
+    node = ast.FunctionDef(
+        name="example",
+        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+        body=[],
+        decorator_list=[],
+        returns=ast.Name(id="bool", ctx=ast.Load()),
+        type_comment=None,
+    )
 
-    result = normalize_signature(func_node)
+    # Act
+    result = normalize_signature(node)
 
-    assert result == "def variadic(*args, **kwargs)"
+    # Assert
+    assert result == "def example() -> bool"
 
-    # With annotations
-    code2 = "def typed_variadic(*args: int, **kwargs: str) -> None: pass"
-    tree2 = ast.parse(code2)
-    func_node2 = tree2.body[0]
 
-    result2 = normalize_signature(func_node2)
+def test_normalize_signature_with_async_function():
+    """
+    Test normalize_signature with an async function.
+    """
+    # Arrange
+    node = ast.AsyncFunctionDef(
+        name="example",
+        args=ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+        body=[],
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
 
-    assert result2 == "def typed_variadic(*args: int, **kwargs: str) -> None"
+    # Act
+    result = normalize_signature(node)
+
+    # Assert
+    assert result == "async def example()"

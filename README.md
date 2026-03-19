@@ -217,7 +217,6 @@ Open a terminal in VSCode and execute the following command:
 MIT. See [LICENSE](LICENSE) for more information.
 
 ## TODO
-- Add progress bar inside pipeline.py during tests validation
 - Add option to main to calculate tests only if file not already in tests/ (filter nodes by file)
 - Complete readme Examples section
 - Study the possibility to run the tests in docker isolated environment for safety

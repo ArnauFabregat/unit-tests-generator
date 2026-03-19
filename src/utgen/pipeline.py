@@ -2,6 +2,8 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from tqdm import tqdm
+
 from utgen.logger import logger
 from utgen.raggraph.utils import get_node_context
 from utgen.raggraph.walker import build_graph_from_directory
@@ -56,8 +58,11 @@ def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str =
     logger.info("Test generation process completed.")
 
     logger.info("Validating and saving generated tests...")
-    for save_path, nodes in tests_results.items():
+    pbar = tqdm(tests_results.items(), desc="Overall Progress", unit="file")
+
+    for save_path, nodes in pbar:
         accepted_tests: list[tuple[str, str]] = []
+
         for node_id, tests in nodes.items():
             base_import = (
                 "from "
@@ -67,9 +72,11 @@ def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str =
             )
             for name, values in tests.items():
                 imports, code = values["imports"], values["code"]
+
                 if base_import not in imports:
                     logger.debug(f"Added missing import `{base_import}` for test `{name}`.")
                     imports.append(base_import)
+
                 imports = "\n".join(imports)
 
                 if validate_individual_test(import_code=imports, test_code=code):

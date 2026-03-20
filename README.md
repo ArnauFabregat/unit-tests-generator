@@ -34,6 +34,12 @@ pip install unit-tests-generator
 
 # Generate tests using source and output paths
 utgen -s src/ -t tests/
+
+# OpenAI Responses API with auto_chain
+utgen --model openai/gpt-4o --llm-extra '{"api": "responses", "auto_chain": true}'
+
+# Claude with extended thinking
+utgen --model anthropic/claude-sonnet-4 --llm-extra '{"thinking": {"type": "enabled", "budget_tokens": 5000}}'
 ```
 
 ### Setting up your LLM
@@ -43,8 +49,8 @@ Required environment variables:
 LLM_OPENROUTER_MODEL = ""
 LLM_OPENROUTER_API_KEY = ""
 ```
-- Powered by CrewAI and OpenRouter: https://docs.crewai.com/en/concepts/llms#open-router.
-- OpenRouter models: https://openrouter.ai/models.
+- Powered by CrewAI and OpenRouter: https://docs.crewai.com/en/concepts/llms.
+- TODO FREE link in OpenRouter models: https://openrouter.ai/models.
 
 ## Table of Contents
 1. [Usage](#usage)

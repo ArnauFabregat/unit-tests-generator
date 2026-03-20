@@ -2,6 +2,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from crewai import LLM
 from tqdm import tqdm
 
 from utgen.logger import logger
@@ -11,12 +12,19 @@ from utgen.test_generation_crew.crew import TestGenerationCrew  # type: ignore
 from utgen.validation import save_and_clean_tests, validate_individual_test
 
 
-def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str = "", overwrite: bool = False) -> None:
+def pipeline(
+    source_code_dir: str,
+    tests_output_dir: str,
+    llm: LLM,
+    save_graph_path: str = "",
+    overwrite: bool = False,
+) -> None:
     """
     Main function to orchestrate the test generation process.
     Args:
         source_code_dir (str): Directory containing the source code to analyze.
         tests_output_dir (str): Directory where generated tests will be saved.
+        llm (LLM): An instance of a language model to be used by the test generation crew.
         save_graph_path (str): Path to save the graph representation.
         overwrite (bool): If False, skip generation for files that already have a test file.
     """
@@ -26,7 +34,7 @@ def pipeline(source_code_dir: str, tests_output_dir: str, save_graph_path: str =
 
     logger.info("Started test generation process...")
     tests_results: defaultdict[str, dict[str, dict]] = defaultdict(dict)
-    test_generator = TestGenerationCrew(guardrail_max_retries=5, verbose=False)
+    test_generator = TestGenerationCrew(llm=llm, guardrail_max_retries=5, verbose=False)
 
     for node_id, data in list(g.nodes(data=True)):
         if data["type"] in ["function", "method"]:

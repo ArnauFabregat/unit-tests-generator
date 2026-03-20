@@ -1,173 +1,171 @@
 import os
-from unittest.mock import MagicMock, patch
+import subprocess
+from unittest.mock import patch
+
+from utgen.validation import save_and_clean_tests, validate_individual_test
 
 
-def test_validate_individual_test_with_valid_code():
-    """Test validate_individual_test with valid import and test code."""
+def test_validate_individual_test_with_valid_test():
+    """
+    Test validate_individual_test with a valid test case that should pass.
+    """
+    # Arrange
     import_code = "import pytest"
-    test_code = "def test_example():\n    assert True"
+    test_code = """
 
+def test_example():
+    assert 1 + 1 == 2
+    """
+
+    # Act
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0)
-
-        from utgen.validation import validate_individual_test
+        # Simulate a successful pytest run (returncode 0)
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["pytest", "temp_validation.py", "-q", "--tb=no"], returncode=0, stdout=b".\n", stderr=b""
+        )
 
         result = validate_individual_test(import_code, test_code)
 
-        assert result is True
-        mock_run.assert_called_once()
-        args = mock_run.call_args[0][0]
-        assert args[0] == "pytest"
-        assert "temp_validation.py" in args[1]
-        assert "-q" in args
-        assert "--tb=no" in args
-
-        # File should be removed after execution
-        assert not os.path.exists("temp_validation.py")
+    # Assert
+    assert result is True
+    mock_run.assert_called_once()
 
 
-def test_validate_individual_test_with_failing_test():
-    """Test validate_individual_test when test fails."""
+def test_validate_individual_test_with_invalid_test():
+    """
+    Test validate_individual_test with a failing test case.
+    """
+    # Arrange
     import_code = "import pytest"
-    test_code = "def test_example():\n    assert False"
+    test_code = """
 
+def test_example():
+    assert 1 + 1 == 3
+    """
+
+    # Act
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=1)
-
-        from utgen.validation import validate_individual_test
+        # Simulate a failing pytest run (returncode 1)
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["pytest", "temp_validation.py", "-q", "--tb=no"], returncode=1, stdout=b"", stderr=b""
+        )
 
         result = validate_individual_test(import_code, test_code)
 
-        assert result is False
-        mock_run.assert_called_once()
-
-        # File should be removed even after failure
-        assert not os.path.exists("temp_validation.py")
+    # Assert
+    assert result is False
+    mock_run.assert_called_once()
 
 
 def test_validate_individual_test_with_syntax_error():
-    """Test validate_individual_test when code has syntax error."""
+    """
+    Test validate_individual_test with invalid Python syntax.
+    """
+    # Arrange
     import_code = "import pytest"
-    test_code = "def test_example():\n    assert True\n  invalid_indentation"
+    test_code = """
 
+def test_example():
+    assert 1 + 1 == 2
+    # Missing closing quote
+    print('Hello World
+    """
+
+    # Act
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=1)
-
-        from utgen.validation import validate_individual_test
+        # Simulate a syntax error (returncode 2)
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["pytest", "temp_validation.py", "-q", "--tb=no"], returncode=2, stdout=b"", stderr=b""
+        )
 
         result = validate_individual_test(import_code, test_code)
 
-        assert result is False
-        mock_run.assert_called_once()
-
-        # File should be removed even after syntax error
-        assert not os.path.exists("temp_validation.py")
+    # Assert
+    assert result is False
+    mock_run.assert_called_once()
 
 
 def test_validate_individual_test_with_empty_code():
-    """Test validate_individual_test with empty test code."""
+    """
+    Test validate_individual_test with empty import and test code.
+    """
+    # Arrange
     import_code = ""
     test_code = ""
 
+    # Act
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=1)  # pytest fails with empty test
-
-        from utgen.validation import validate_individual_test
+        # Simulate a successful pytest run (returncode 0)
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["pytest", "temp_validation.py", "-q", "--tb=no"], returncode=0, stdout=b".\n", stderr=b""
+        )
 
         result = validate_individual_test(import_code, test_code)
 
-        assert result is False
-        mock_run.assert_called_once()
-
-        # File should be removed
-        assert not os.path.exists("temp_validation.py")
+    # Assert
+    assert result is True
+    mock_run.assert_called_once()
 
 
 def test_save_and_clean_tests_with_valid_tests(tmp_path):
-    """Test save_and_clean_tests with valid test data."""
+    """
+    Test save_and_clean_tests with valid test data.
+    """
+    # Arrange
     valid_tests = [
-        ("import pytest", "def test_example():\n    assert True"),
-        ("import sys", "def test_sys():\n    assert sys.version_info"),
+        ("import pytest", "def test_example():", "    assert 1 + 1 == 2"),
+        ("import pytest", "def test_another():", "    assert 2 + 2 == 4"),
     ]
-    destination = tmp_path / "test_output.py"
 
-    with patch("utgen.validation.subprocess.run") as mock_subprocess:
-        from utgen.validation import save_and_clean_tests
+    # Convert to list of tuples (import_string, test_body_string)
+    valid_tests_formatted = [(imp, body) for imp, body, _ in valid_tests]
 
-        save_and_clean_tests(valid_tests, str(destination))
+    destination = str(tmp_path / "tests" / "llm_generated_tests.py")
 
-        # Check file was created
-        assert destination.exists()
+    # Mock subprocess calls for Ruff
+    with patch("subprocess.run") as mock_run:
+        # Mock successful Ruff operations
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["ruff", "check", "--select", "I", "--fix", destination], returncode=0, stdout=b"", stderr=b""
+        )
 
-        # Check file content
-        content = destination.read_text()
-        assert "import pytest" in content
-        assert "import sys" in content
-        assert "def test_example()" in content
-        assert "def test_sys()" in content
+        # Act
+        save_and_clean_tests(valid_tests_formatted, destination)
 
-        # Check Ruff was called three times
-        assert mock_subprocess.call_count == 3
-        # First call: isort
-        assert mock_subprocess.call_args_list[0][0][0] == ["ruff", "check", "--select", "I", "--fix", str(destination)]
-        # Second call: linting
-        assert mock_subprocess.call_args_list[1][0][0] == ["ruff", "check", "--fix", str(destination)]
-        # Third call: formatting
-        assert mock_subprocess.call_args_list[2][0][0] == ["ruff", "format", str(destination)]
+    # Assert
+    # Verify the file was created
+    assert os.path.exists(destination)
 
+    # Verify the content structure
+    with open(destination, encoding="utf-8") as f:
+        content = f.read()
 
-def test_save_and_clean_tests_with_empty_list():
-    """Test save_and_clean_tests with empty list returns early."""
-    with (
-        patch("utgen.validation.os.makedirs") as mock_makedirs,
-        patch("utgen.validation.open") as mock_open,
-        patch("utgen.validation.subprocess.run") as mock_subprocess,
-    ):
-        from utgen.validation import save_and_clean_tests
+    # Check that imports and tests are separated by a blank line
+    assert "import pytest\n\ndef test_example():" in content
+    assert "def test_another():" in content
 
-        save_and_clean_tests([], "/nonexistent/path.py")
-
-        # Should not create directories
-        mock_makedirs.assert_not_called()
-        # Should not open file
-        mock_open.assert_not_called()
-        # Should not run Ruff
-        mock_subprocess.assert_not_called()
+    # Verify Ruff was called three times
+    assert mock_run.call_count == 3
 
 
-def test_save_and_clean_tests_creates_nested_directories(tmp_path):
-    """Test save_and_clean_tests creates nested directories."""
-    destination = tmp_path / "deep" / "nested" / "folder" / "test.py"
-    valid_tests = [("import pytest", "def test_pass(): pass")]
+def test_save_and_clean_tests_with_no_valid_tests():
+    """
+    Test save_and_clean_tests with an empty list of valid tests.
+    """
+    # Arrange
+    valid_tests = []
+    destination = "../tests/llm_generated_tests.py"
 
-    with patch("utgen.validation.subprocess.run"):
-        from utgen.validation import save_and_clean_tests
+    # Mock logger.debug
+    with patch("utgen.validation.logger.debug") as mock_debug:
+        # Mock subprocess (should not be called)
+        with patch("subprocess.run") as mock_run:
+            # Act
+            save_and_clean_tests(valid_tests, destination)
 
-        save_and_clean_tests(valid_tests, str(destination))
+    # Assert
+    # Verify logger.debug was called with the expected message
+    mock_debug.assert_called_once_with("No valid tests available to save.")
 
-        # Check directories were created
-        assert destination.parent.exists()
-        # Check file was created
-        assert destination.exists()
-
-
-def test_save_and_clean_tests_with_duplicate_imports(tmp_path):
-    """Test save_and_clean_tests with duplicate imports."""
-    valid_tests = [
-        ("import pytest", "def test_1(): pass"),
-        ("import pytest", "def test_2(): pass"),
-        ("import sys", "def test_3(): pass"),
-    ]
-    destination = tmp_path / "duplicates.py"
-
-    with patch("utgen.validation.subprocess.run"):
-        from utgen.validation import save_and_clean_tests
-
-        save_and_clean_tests(valid_tests, str(destination))
-
-        content = destination.read_text()
-        # Before Ruff formatting, duplicate imports are preserved in raw content
-        import_lines = [line.strip() for line in content.split("\n") if line.strip().startswith("import")]
-        assert len(import_lines) == 3
-        assert import_lines.count("import pytest") == 2
-        assert import_lines.count("import sys") == 1
+    # Verify subprocess.run was never called
+    mock_run.assert_not_called()

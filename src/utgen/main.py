@@ -15,22 +15,22 @@ def run(
     src_path: Annotated[Path, typer.Option("--src_path", "-s", help="Path to source")],
     test_path: Annotated[Path, typer.Option("--test_path", "-t", help="Path to tests")],
     graph_path: Annotated[Path | None, typer.Option("--graph_path", "-g", help="Path to Graph")] = None,
+    overwrite: Annotated[bool, typer.Option("--overwrite", "-o", help="Overwrite existing test files")] = False,
 ) -> None:
     """
     Generate unit tests based on your source code and RAG-Graph.
     """
     logger.info("Initializing utgen...")
-    logger.info(f"Source: {src_path} | Tests: {test_path} | Graph: {graph_path}")
+    logger.info(f"Source: {src_path} | Tests: {test_path} | Graph: {graph_path} | Overwrite: {overwrite}")
 
     pipeline(
         source_code_dir=str(src_path),
         tests_output_dir=str(test_path),
         save_graph_path=str(graph_path) if graph_path else "",
+        overwrite=overwrite,
     )
 
     logger.info("Running coverage report...")
-    # We run pytest-cov on the newly generated test directory
-    # --cov points to the source code we want to measure
     try:
         subprocess.run(["pytest", str(test_path), f"--cov={src_path}", "--cov-report=term-missing"], check=True)
     except subprocess.CalledProcessError:

@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from utgen.test_generation_crew.crew import GUARDRAIL_MAX_RETRIES, TestGenerationCrew
+from utgen.test_generation_crew.crew import GUARDRAIL_MAX_RETRIES, TestGenerationCrew  # type: ignore
 
 
 def test_init_defaults():

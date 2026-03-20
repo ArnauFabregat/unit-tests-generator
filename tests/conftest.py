@@ -1,7 +1,7 @@
 import os
 
 
-def pytest_configure(_):
+def pytest_configure(config):
     """
     This hook runs BEFORE any tests or modules are imported.
     """

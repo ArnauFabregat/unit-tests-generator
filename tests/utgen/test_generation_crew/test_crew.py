@@ -1,52 +1,92 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+from utgen.test_generation_crew.crew import GUARDRAIL_MAX_RETRIES, TestGenerationCrew
 
 
-def test_test_generation_crew_init_default_values():
-    """Test TestGenerationCrew.__init__ with default values."""
-    # Mock the constant GUARDRAIL_MAX_RETRIES
-    with patch("utgen.test_generation_crew.crew.GUARDRAIL_MAX_RETRIES", 3):
-        from utgen.test_generation_crew.crew import TestGenerationCrew
-
-        # Create instance with default parameters
-        crew = TestGenerationCrew()
-
-        # Check that default values are set
-        assert crew._guardrail_max_retries == 3
-        assert crew._verbose is False
+def test_init_defaults():
+    """Test TestGenerationCrew initialization with default values."""
+    mock_llm = Mock()
+    crew = TestGenerationCrew(llm=mock_llm)
+    assert crew._llm is mock_llm
+    assert crew._guardrail_max_retries == GUARDRAIL_MAX_RETRIES
+    assert crew._verbose is False
 
 
-def test_test_generation_crew_init_custom_values():
-    """Test TestGenerationCrew.__init__ with custom values."""
-    with patch("utgen.test_generation_crew.crew.GUARDRAIL_MAX_RETRIES", 3):
-        from utgen.test_generation_crew.crew import TestGenerationCrew
-
-        # Create instance with custom parameters
-        crew = TestGenerationCrew(guardrail_max_retries=10, verbose=True)
-
-        # Check that custom values are set
-        assert crew._guardrail_max_retries == 10
-        assert crew._verbose is True
+def test_init_explicit():
+    """Test TestGenerationCrew initialization with explicit values."""
+    mock_llm = Mock()
+    crew = TestGenerationCrew(llm=mock_llm, guardrail_max_retries=10, verbose=True)
+    assert crew._llm is mock_llm
+    assert crew._guardrail_max_retries == 10
+    assert crew._verbose is True
 
 
-def test_test_generation_crew_init_with_zero_retries():
-    """Test TestGenerationCrew.__init__ with zero retries."""
-    with patch("utgen.test_generation_crew.crew.GUARDRAIL_MAX_RETRIES", 3):
-        from utgen.test_generation_crew.crew import TestGenerationCrew
+def test_test_generator_agent_returns_agent():
+    """Test that test_generator_agent returns an Agent instance with correct config."""
+    # Arrange
+    mock_llm = Mock()
+    crew = TestGenerationCrew(llm=mock_llm)
+    # Set agents_config to mimic loaded YAML config
+    crew.agents_config = {
+        "test_generator_agent": {
+            "role": "Test Generator",
+            "goal": "Generate unit tests",
+            "backstory": "Expert in testing",
+        }
+    }
 
-        # Create instance with zero retries
-        crew = TestGenerationCrew(guardrail_max_retries=0, verbose=False)
+    # Act
+    with patch("utgen.test_generation_crew.crew.Agent") as MockAgent:
+        agent = crew.test_generator_agent()
 
-        assert crew._guardrail_max_retries == 0
-        assert crew._verbose is False
+        # Assert
+        MockAgent.assert_called_once()
+        call_args, call_kwargs = MockAgent.call_args
+        assert call_kwargs["config"] == {
+            "role": "Test Generator",
+            "goal": "Generate unit tests",
+            "backstory": "Expert in testing",
+        }
+        assert call_kwargs["llm"] is mock_llm
+        assert agent is MockAgent.return_value
 
 
-def test_test_generation_crew_init_large_retries():
-    """Test TestGenerationCrew.__init__ with large retry value."""
-    with patch("utgen.test_generation_crew.crew.GUARDRAIL_MAX_RETRIES", 3):
-        from utgen.test_generation_crew.crew import TestGenerationCrew
+def test_generate_unit_tests_task_returns_task():
+    """Test generate_unit_tests_task returns a Task with correct configuration."""
+    # Arrange
+    mock_llm = Mock()
+    crew = TestGenerationCrew(llm=mock_llm)
+    # Set up required config attributes
+    crew.tasks_config = {
+        "generate_unit_tests_task": {
+            "description": "Generate unit tests for {graph_context}",
+            "expected_output": "JSON with test cases",
+        }
+    }
+    crew.agents_config = {
+        "test_generator_agent": {
+            "role": "Test Generator",
+            "goal": "Generate unit tests",
+            "backstory": "Expert in testing",
+        }
+    }
+    # Mock the agent method to return a known agent
+    mock_agent = Mock()
+    crew.test_generator_agent = Mock(return_value=mock_agent)
 
-        # Create instance with large retry value
-        crew = TestGenerationCrew(guardrail_max_retries=1000, verbose=True)
+    # Act
+    with patch("utgen.test_generation_crew.crew.Task") as MockTask:
+        task = crew.generate_unit_tests_task()
 
-        assert crew._guardrail_max_retries == 1000
-        assert crew._verbose is True
+        # Assert
+        MockTask.assert_called_once()
+        call_args, call_kwargs = MockTask.call_args
+        assert call_kwargs["description"] == "Generate unit tests for {graph_context}"
+        assert call_kwargs["expected_output"] == "JSON with test cases"
+        assert call_kwargs["agent"] is mock_agent
+        # Check guardrail is the expected function
+        from utgen.test_generation_crew.guardrails import validate_tests_schema
+
+        assert call_kwargs["guardrail"] is validate_tests_schema
+        assert call_kwargs["guardrail_max_retries"] == crew._guardrail_max_retries
+        assert task is MockTask.return_value

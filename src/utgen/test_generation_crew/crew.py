@@ -8,7 +8,7 @@ context provided from the RAG-Graph. The crew consists of a single agent that
 generates unit tests for functions and methods identified in the source code.
 """
 
-from crewai import Agent, Crew, Task, LLM
+from crewai import LLM, Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 
 from utgen.constants import GUARDRAIL_MAX_RETRIES

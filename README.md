@@ -1,9 +1,13 @@
+<div align="center">
+
 # 🛡️ Unit-Tests-Generator
+*Autonomous, Graph-RAG-Driven Test Engineering for Python.*
+
 [![PyPI version](https://img.shields.io/pypi/v/unit-tests-generator.svg)](https://pypi.org/project/unit-tests-generator/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/unit-tests-generator.svg)](https://pypi.org/project/unit-tests-generator/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-*Autonomous, Graph-RAG-Driven Test Engineering for Python.*
+</div>
 
 **Unit-Tests-Generator** is an intelligent agentic tool that automates the entire `pytest` lifecycle. Unlike static template generators, it leverages an in-memory knowledge graph of your codebase and RAG to produce context-aware, executable, and validated test suites.
 
@@ -83,10 +87,10 @@ ANTHROPIC_API_KEY = ""
 | `--graph_path` | `-g` | Path to export graph data. | No | `None` |
 | `--overwrite` | `-o` | If provided, regenerates tests even if the file already exists in the test directory. | No | `False` |
 | `--model` | `-m` | The LLM model to use (CrewAI/LiteLLM format). | No | `openai/gpt-4o` |
-| `--temperature` | - | Sampling temperature for the model. | No | `0.3` |
-| `--max-tokens` | - | The maximum number of tokens to generate. | No | `4096` |
-| `--base-url` | - | Custom API endpoint for the LLM provider. | No | `None` |
-| `--llm-extra` | - | A JSON string for additional LLM provider parameters. | No | `None` |
+| `--temperature` | — | Sampling temperature for the model. | No | `0.3` |
+| `--max-tokens` | — | The maximum number of tokens to generate. | No | `4096` |
+| `--base-url` | — | Custom API endpoint for the LLM provider. | No | `None` |
+| `--llm-extra` | — | A JSON string for additional LLM provider parameters. | No | `None` |
 | `--help` | — | Show the help message and exit. | No | — |
 
 By default, `utgen` skips files that already have a corresponding test file in the output directory and don't export the repository graph:

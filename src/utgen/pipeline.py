@@ -9,7 +9,7 @@ from utgen.logger import logger
 from utgen.raggraph.utils import get_node_context
 from utgen.raggraph.walker import build_graph_from_directory
 from utgen.test_generation_crew.crew import TestGenerationCrew  # type: ignore
-from utgen.validation import save_and_clean_tests, validate_individual_test
+from utgen.validation import ensure_init_files, save_and_clean_tests, validate_individual_test
 
 
 def pipeline(
@@ -93,4 +93,8 @@ def pipeline(
 
         logger.debug(f"Saving cleaned tests for `{save_path}`...")
         save_and_clean_tests(valid_tests=accepted_tests, destination=f"{tests_output_dir}/{save_path}")
+
+        # This ensures the directory structure is treated as a package by pytest
+        ensure_init_files(Path(tests_output_dir), Path(f"{tests_output_dir}/{save_path}"))
+
     logger.info("All tests validated and saved successfully.")

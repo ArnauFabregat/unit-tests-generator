@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 
 from utgen.logger import logger
 
@@ -80,3 +81,25 @@ def save_and_clean_tests(
     subprocess.run(["ruff", "format", destination], capture_output=True)
 
     logger.debug(f"Process finished. File saved at: {destination}")
+
+
+def ensure_init_files(base_dir: Path, target_path: Path) -> None:
+    """
+    Ensures that every directory level from the base directory down to the
+    target path contains an __init__.py file.
+
+    This is necessary for pytest to treat nested test directories as unique
+    Python packages, preventing "import file mismatch" errors when multiple
+    test files share the same filename (e.g., test_crew.py).
+
+    Args:
+        base_dir (Path): The root directory where tests are stored (e.g., /tests).
+        target_path (Path): The path to the specific test file or folder being created.
+    """
+    current = target_path if target_path.is_dir() else target_path.parent
+    while current != base_dir and current.parts:
+        init_file = current / "__init__.py"
+        if not init_file.exists():
+            init_file.touch()
+            logger.debug(f"Created missing __init__.py in {current}")
+        current = current.parent
